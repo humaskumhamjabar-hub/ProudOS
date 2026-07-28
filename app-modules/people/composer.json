@@ -1,0 +1,24 @@
+{
+	"name": "modules/people",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"Modules\\People\\": "src/",
+			"Modules\\People\\Tests\\": "tests/",
+			"Modules\\People\\Database\\Factories\\": "database/factories/",
+			"Modules\\People\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Modules\\People\\Providers\\PeopleServiceProvider"
+			]
+		}
+	}
+}

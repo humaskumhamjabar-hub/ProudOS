@@ -1,0 +1,24 @@
+{
+    "name": "modules/planning",
+    "description": "PR Plan and content planning for PROUD",
+    "type": "library",
+    "version": "1.0",
+    "license": "proprietary",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Planning\\": "src/",
+            "Modules\\Planning\\Tests\\": "tests/",
+            "Modules\\Planning\\Database\\Factories\\": "database/factories/",
+            "Modules\\Planning\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Planning\\Providers\\PlanningServiceProvider"
+            ]
+        }
+    }
+}

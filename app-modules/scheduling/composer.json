@@ -1,0 +1,26 @@
+{
+	"name": "modules/scheduling",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {
+		"modules/people": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"Modules\\Scheduling\\": "src/",
+			"Modules\\Scheduling\\Tests\\": "tests/",
+			"Modules\\Scheduling\\Database\\Factories\\": "database/factories/",
+			"Modules\\Scheduling\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Modules\\Scheduling\\Providers\\SchedulingServiceProvider"
+			]
+		}
+	}
+}

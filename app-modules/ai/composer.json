@@ -1,0 +1,22 @@
+{
+    "name": "modules/ai",
+    "description": "Provider-neutral AI suggestions for PROUD",
+    "type": "library",
+    "version": "1.0",
+    "license": "proprietary",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Ai\\": "src/",
+            "Modules\\Ai\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Ai\\Providers\\AiServiceProvider"
+            ]
+        }
+    }
+}
