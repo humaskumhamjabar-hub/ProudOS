@@ -30,14 +30,15 @@ class DataAwalSeeder extends Seeder
             ['nama' => 'Upload publikasi', 'slug' => 'upload_publikasi'],
             ['nama' => 'Kelola pustaka', 'slug' => 'kelola_pustaka'],
             ['nama' => 'Kelola template visual', 'slug' => 'kelola_template_visual'],
+            ['nama' => 'Kelola monitoring', 'slug' => 'kelola_monitoring'],
             ['nama' => 'Lihat laporan', 'slug' => 'lihat_laporan'],
         ] as $perm) {
             DB::table('permissions')->updateOrInsert(['slug' => $perm['slug']], $perm + ['created_at' => $now, 'updated_at' => $now]);
         }
 
         $izinPerRole = [
-            'admin' => ['kelola_pengguna', 'kelola_agenda', 'kelola_pr_plan', 'kelola_konten', 'kelola_penugasan', 'kelola_tugas', 'upload_publikasi', 'kelola_pustaka', 'kelola_template_visual', 'lihat_laporan'],
-            'koordinator' => ['kelola_agenda', 'kelola_pr_plan', 'kelola_konten', 'kelola_penugasan', 'kelola_tugas', 'upload_publikasi', 'kelola_pustaka', 'lihat_laporan'],
+            'admin' => ['kelola_pengguna', 'kelola_agenda', 'kelola_pr_plan', 'kelola_konten', 'kelola_penugasan', 'kelola_tugas', 'upload_publikasi', 'kelola_pustaka', 'kelola_template_visual', 'kelola_monitoring', 'lihat_laporan'],
+            'koordinator' => ['kelola_agenda', 'kelola_pr_plan', 'kelola_konten', 'kelola_penugasan', 'kelola_tugas', 'upload_publikasi', 'kelola_pustaka', 'kelola_monitoring', 'lihat_laporan'],
             'staf' => ['upload_publikasi'],
             'magang' => [],
         ];
@@ -117,6 +118,21 @@ class DataAwalSeeder extends Seeder
                         'created_at' => $now,
                         'updated_at' => $now,
                     ],
+                );
+            }
+
+            $videoId = DB::table('template_visual')->where('nama', 'Video Vertikal Kanwil')->where('versi', 1)->value('id');
+            if (! $videoId) {
+                $videoId = DB::table('template_visual')->insertGetId([
+                    'nama' => 'Video Vertikal Kanwil', 'format' => 'video_vertikal', 'rasio' => '9:16',
+                    'versi' => 1, 'status' => 'aktif', 'durasi_per_slide_detik' => 4,
+                    'dibuat_oleh' => $adminId, 'created_at' => $now, 'updated_at' => $now,
+                ]);
+            }
+            foreach (['cover', 'isi'] as $jenis) {
+                DB::table('template_layout')->updateOrInsert(
+                    ['template_visual_id' => $videoId, 'jenis' => $jenis],
+                    ['definisi' => json_encode(['tema' => 'video-vertikal-kanwil']), 'batas_karakter' => json_encode(['kicker' => 32, 'judul' => 90, 'isi' => 200]), 'created_at' => $now, 'updated_at' => $now],
                 );
             }
         }

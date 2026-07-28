@@ -104,3 +104,17 @@ arch('people tidak melihat siapa pun')
     ->expect('Modules\People')
     ->not->toUse(['Modules\Agenda', 'Modules\Work', 'Modules\Scheduling', 'Modules\Publishing', 'Modules\Library'])
     ->group('arch');
+
+arch('monitoring berdiri sendiri dari modul lain')
+    ->expect('Modules\Monitoring')
+    ->not->toUse([
+        'Modules\Agenda',
+        'Modules\Content',
+        'Modules\People\Models',
+        'Modules\Planning',
+        'Modules\Publishing',
+        'Modules\Scheduling',
+        'Modules\Visual',
+        'Modules\Work',
+    ])
+    ->group('arch');

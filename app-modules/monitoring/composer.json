@@ -1,0 +1,22 @@
+{
+    "name": "modules/monitoring",
+    "description": "Public findings and follow-up tracking for PROUD",
+    "type": "library",
+    "version": "1.0",
+    "license": "proprietary",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Monitoring\\": "src/",
+            "Modules\\Monitoring\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Monitoring\\Providers\\MonitoringServiceProvider"
+            ]
+        }
+    }
+}

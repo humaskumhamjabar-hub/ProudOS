@@ -38,7 +38,7 @@
                             @foreach ($kanal as $item)<option value="{{ $item->id }}">{{ $item->nama }}</option>@endforeach
                         </select>
                     </label>
-                    <button wire:click="unduhCsvPublikasi" class="rounded-xl bg-emerald-700 px-5 py-2.5 text-xs font-black text-white hover:bg-emerald-600">Unduh CSV</button>
+                    <div class="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-1"><button wire:click="unduhExcelPublikasi" class="rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-600">Excel</button><button wire:click="unduhPdfPublikasi" class="rounded-xl bg-[#112831] px-4 py-2.5 text-xs font-black text-white hover:bg-slate-700">PDF</button><button wire:click="unduhCsvPublikasi" class="rounded-xl border border-stone-300 px-4 py-2.5 text-xs font-black hover:bg-stone-50 dark:border-zinc-700 dark:hover:bg-zinc-800">CSV</button></div>
                 </div>
 
                 <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

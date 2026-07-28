@@ -45,6 +45,8 @@ class KelolaAgenda extends Component
 
     public int|string $peranId = '';
 
+    public int|string $pembimbingId = '';
+
     #[Locked]
     public bool $bolehTerobos = false;
 
@@ -58,7 +60,7 @@ class KelolaAgenda extends Component
         Gate::authorize('kelola_penugasan');
 
         $this->agendaTimId = Agenda::findOrFail($agendaId)->id;
-        $this->reset(['anggotaId', 'peranId', 'bolehTerobos']);
+        $this->reset(['anggotaId', 'peranId', 'pembimbingId', 'bolehTerobos']);
     }
 
     public function simpanPenugasan(BuatPenugasan $buat): void
@@ -74,8 +76,14 @@ class KelolaAgenda extends Component
             'agendaTimId' => ['required', 'integer', 'exists:agendas,id'],
             'anggotaId' => ['required', 'integer', Rule::exists('users', 'id')->where('status', 'aktif')->whereNull('deleted_at')],
             'peranId' => ['required', 'integer', Rule::exists('peran_produksi', 'id')->where('aktif', true)],
+            'pembimbingId' => ['nullable', 'integer', 'different:anggotaId', Rule::exists('users', 'id')->where('status', 'aktif')->whereNull('deleted_at')],
         ]);
         $agenda = Agenda::findOrFail($data['agendaTimId']);
+        $anggota = User::findOrFail($data['anggotaId']);
+
+        if ($anggota->batch_id && ! $data['pembimbingId']) {
+            throw ValidationException::withMessages(['pembimbingId' => 'Pilih pembimbing untuk peserta magang.']);
+        }
 
         if (! $agenda->selesai_at) {
             $this->addError('agendaTimId', 'Agenda harus memiliki waktu selesai sebelum tim ditugaskan.');
@@ -85,8 +93,9 @@ class KelolaAgenda extends Component
 
         try {
             $buat->handle([
-                'user_id' => User::findOrFail($data['anggotaId'])->id,
+                'user_id' => $anggota->id,
                 'peran_id' => PeranProduksi::findOrFail($data['peranId'])->id,
+                'pembimbing_id' => $data['pembimbingId'] ? User::findOrFail($data['pembimbingId'])->id : null,
                 'tipe' => 'berjam',
                 'mulai_at' => $agenda->mulai_at,
                 'selesai_at' => $agenda->selesai_at,
@@ -136,6 +145,11 @@ class KelolaAgenda extends Component
     }
 
     public function updatedPeranId(): void
+    {
+        $this->bolehTerobos = false;
+    }
+
+    public function updatedPembimbingId(): void
     {
         $this->bolehTerobos = false;
     }
@@ -246,7 +260,7 @@ class KelolaAgenda extends Component
             'peran' => $agendaTim ? PeranProduksi::where('aktif', true)->orderBy('nama')->get() : collect(),
             'penugasan' => $penugasan,
             // ponytail: read names in one map; add the model relation only when another caller needs it.
-            'namaAnggota' => User::withTrashed()->whereIn('id', $penugasan->pluck('user_id'))->pluck('nama', 'id'),
+            'namaAnggota' => User::withTrashed()->whereIn('id', $penugasan->pluck('user_id')->merge($penugasan->pluck('pembimbing_id'))->filter())->pluck('nama', 'id'),
         ]);
     }
 }

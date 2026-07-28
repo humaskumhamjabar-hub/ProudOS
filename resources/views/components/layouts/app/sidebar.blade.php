@@ -17,21 +17,32 @@
                     <flux:navlist.item icon="clipboard-document-list" :href="route('tugas-saya')" :current="request()->routeIs('tugas-saya')" wire:navigate>Tugas Saya</flux:navlist.item>
                     <flux:navlist.item icon="view-columns" :href="route('papan')" :current="request()->routeIs('papan')" wire:navigate>Papan Kanban</flux:navlist.item>
                     <flux:navlist.item icon="calendar" :href="route('kalender')" :current="request()->routeIs('kalender')" wire:navigate>Kalender</flux:navlist.item>
+                    <flux:navlist.item icon="book-open" :href="route('pustaka.index')" :current="request()->routeIs('pustaka.*')" wire:navigate>Pustaka</flux:navlist.item>
                     @can('kelola_pengguna')
                         <flux:navlist.item icon="user-group" :href="route('tim.index')" :current="request()->routeIs('tim.*')" wire:navigate>Kelola Tim</flux:navlist.item>
                     @endcan
                     @can('kelola_agenda')
                         <flux:navlist.item icon="calendar-days" :href="route('agenda.index')" :current="request()->routeIs('agenda.*')" wire:navigate>Kelola Agenda</flux:navlist.item>
                     @endcan
+                    @can('kelola_tugas')
+                        <flux:navlist.item icon="clipboard-document-check" :href="route('tugas.index')" :current="request()->routeIs('tugas.index')" wire:navigate>Kelola Tugas</flux:navlist.item>
+                    @endcan
                     @can('kelola_pr_plan')
                         <flux:navlist.item icon="document-chart-bar" :href="route('pr-plan.index')" :current="request()->routeIs('pr-plan.*')" wire:navigate>PR Plan</flux:navlist.item>
                     @endcan
                     @can('kelola_konten')
                         <flux:navlist.item icon="pencil-square" :href="route('produksi.index')" :current="request()->routeIs('produksi.*')" wire:navigate>Meja Produksi</flux:navlist.item>
-                        <flux:navlist.item icon="photo" :href="route('visual.carousel')" :current="request()->routeIs('visual.*')" wire:navigate>Studio Carousel</flux:navlist.item>
+                        <flux:navlist.item icon="photo" :href="route('visual.carousel')" :current="request()->routeIs('visual.carousel')" wire:navigate>Studio Carousel</flux:navlist.item>
+                        <flux:navlist.item icon="film" :href="route('visual.video')" :current="request()->routeIs('visual.video')" wire:navigate>Studio Video</flux:navlist.item>
+                    @endcan
+                    @can('kelola_template_visual')
+                        <flux:navlist.item icon="swatch" :href="route('visual.template')" :current="request()->routeIs('visual.template')" wire:navigate>Template Visual</flux:navlist.item>
                     @endcan
                     @can('upload_publikasi')
                         <flux:navlist.item icon="arrow-up-on-square" :href="route('publikasi.index')" :current="request()->routeIs('publikasi.*')" wire:navigate>Publikasi & Arsip</flux:navlist.item>
+                    @endcan
+                    @can('kelola_monitoring')
+                        <flux:navlist.item icon="magnifying-glass" :href="route('monitoring.index')" :current="request()->routeIs('monitoring.*')" wire:navigate>Monitoring</flux:navlist.item>
                     @endcan
                     @can('lihat_laporan')
                         <flux:navlist.item icon="chart-bar-square" :href="route('laporan.index')" :current="request()->routeIs('laporan.*')" wire:navigate>Pusat Laporan</flux:navlist.item>

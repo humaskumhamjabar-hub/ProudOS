@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Dompdf\Dompdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -16,6 +17,9 @@ use Modules\Planning\Models\PrPlan;
 use Modules\Publishing\Models\Kanal;
 use Modules\Publishing\Models\Publikasi;
 use Modules\Scheduling\Models\Penugasan;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 #[Layout('components.layouts.app')]
 class PusatLaporan extends Component
@@ -60,18 +64,82 @@ class PusatLaporan extends Component
             fputcsv($file, ['Tanggal tayang', 'Kanal', 'PIC', 'Judul paket', 'URL', 'Diubah setelah tayang']);
 
             foreach ($publikasi as $item) {
-                fputcsv($file, [
+                fputcsv($file, $this->sanitizeCsvRow([
                     $item->tayang_at->format('Y-m-d H:i'),
                     $item->kanal?->nama,
                     $item->pic_nama,
                     $item->judul_paket,
                     $item->url,
                     $item->diubah_setelah_tayang ? 'Ya' : 'Tidak',
-                ]);
+                ]));
             }
 
             fclose($file);
         }, $nama, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function unduhExcelPublikasi()
+    {
+        Gate::authorize('lihat_laporan');
+        $publikasi = $this->publikasiSiapEkspor();
+
+        return response()->streamDownload(
+            function () use ($publikasi) {
+                $spreadsheet = new Spreadsheet;
+                $sheet = $spreadsheet->getActiveSheet();
+                $sheet->setTitle('Publikasi');
+                $sheet->fromArray(['Tanggal tayang', 'Kanal', 'PIC', 'Judul paket', 'URL', 'Diubah setelah tayang'], null, 'A1');
+
+                foreach ($publikasi as $index => $item) {
+                    $baris = $index + 2;
+                    $sheet->setCellValue("A{$baris}", $item->tayang_at->format('Y-m-d H:i'));
+                    foreach (['B' => $item->kanal?->nama, 'C' => $item->pic_nama, 'D' => $item->judul_paket, 'E' => $item->url] as $kolom => $nilai) {
+                        $sheet->setCellValueExplicit("{$kolom}{$baris}", $nilai, DataType::TYPE_STRING);
+                    }
+                    $sheet->setCellValue("F{$baris}", $item->diubah_setelah_tayang ? 'Ya' : 'Tidak');
+                }
+
+                $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+                foreach (range('A', 'F') as $kolom) {
+                    $sheet->getColumnDimension($kolom)->setAutoSize(true);
+                }
+
+                $temp = tempnam(sys_get_temp_dir(), 'proud-xlsx-');
+                throw_if($temp === false, \RuntimeException::class, 'File sementara Excel tidak dapat dibuat.');
+
+                (new Xlsx($spreadsheet))->save($temp);
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+
+                $stream = fopen($temp, 'rb');
+                throw_if($stream === false, \RuntimeException::class, 'File Excel tidak dapat dibaca.');
+                fpassthru($stream);
+                fclose($stream);
+                unlink($temp);
+            },
+            "laporan-publikasi-{$this->mulai}-{$this->selesai}.xlsx",
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        );
+    }
+
+    public function unduhPdfPublikasi()
+    {
+        Gate::authorize('lihat_laporan');
+        $publikasi = $this->publikasiSiapEkspor();
+        $dompdf = new Dompdf;
+        $dompdf->loadHtml(view('exports.laporan-publikasi-pdf', [
+            'publikasi' => $publikasi,
+            'mulai' => $this->mulai,
+            'selesai' => $this->selesai,
+        ])->render());
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->render();
+
+        return response()->streamDownload(
+            fn () => print $dompdf->output(),
+            "laporan-publikasi-{$this->mulai}-{$this->selesai}.pdf",
+            ['Content-Type' => 'application/pdf'],
+        );
     }
 
     public function unduhCsvMagang()
@@ -88,7 +156,7 @@ class PusatLaporan extends Component
 
             foreach ($rekap as $peserta) {
                 $peran = collect($peserta['peran'])->map(fn (int $jumlah, string $nama) => "{$nama}: {$jumlah}")->implode('; ');
-                fputcsv($file, [$peserta['nama'], $peserta['jumlah_penugasan'], $peserta['ragam_kegiatan'], $peserta['jumlah_pembimbing'], $peserta['karya_latihan'], $peserta['catatan_pembimbing'], $peran]);
+                fputcsv($file, $this->sanitizeCsvRow([$peserta['nama'], $peserta['jumlah_penugasan'], $peserta['ragam_kegiatan'], $peserta['jumlah_pembimbing'], $peserta['karya_latihan'], $peserta['catatan_pembimbing'], $peran]));
             }
 
             fclose($file);
@@ -103,6 +171,24 @@ class PusatLaporan extends Component
             ->when($this->selesai, fn (Builder $query) => $query->whereDate('tayang_at', '<=', $this->selesai))
             ->when($this->kanalId, fn (Builder $query) => $query->where('kanal_id', $this->kanalId))
             ->orderByDesc('tayang_at');
+    }
+
+    private function sanitizeCsvRow(array $row): array
+    {
+        return array_map(fn ($cell) => is_string($cell) && in_array($cell[0] ?? '', ['=', '+', '-', '@'], true) ? "'{$cell}" : $cell, $row);
+    }
+
+    private function publikasiSiapEkspor(): Collection
+    {
+        $publikasi = $this->queryPublikasi()->get();
+        $paketJudul = PaketKonten::whereIn('id', $publikasi->pluck('paket_konten_id')->filter())->pluck('judul', 'id');
+        $picNama = User::withTrashed()->whereIn('id', $publikasi->pluck('pic_id'))->pluck('nama', 'id');
+        $publikasi->each(function (Publikasi $item) use ($paketJudul, $picNama) {
+            $item->setAttribute('judul_paket', $paketJudul[$item->paket_konten_id] ?? 'Publikasi mandiri');
+            $item->setAttribute('pic_nama', $picNama[$item->pic_id] ?? 'Akun tidak tersedia');
+        });
+
+        return $publikasi;
     }
 
     private function evaluasiPrPlan(): array
@@ -163,13 +249,7 @@ class PusatLaporan extends Component
     public function render()
     {
         Gate::authorize('lihat_laporan');
-        $publikasi = $this->queryPublikasi()->get();
-        $paketJudul = PaketKonten::whereIn('id', $publikasi->pluck('paket_konten_id')->filter())->pluck('judul', 'id');
-        $picNama = User::withTrashed()->whereIn('id', $publikasi->pluck('pic_id'))->pluck('nama', 'id');
-        $publikasi->each(function (Publikasi $item) use ($paketJudul, $picNama) {
-            $item->setAttribute('judul_paket', $paketJudul[$item->paket_konten_id] ?? 'Publikasi mandiri');
-            $item->setAttribute('pic_nama', $picNama[$item->pic_id] ?? 'Akun tidak tersedia');
-        });
+        $publikasi = $this->publikasiSiapEkspor();
         $perKanal = $publikasi->countBy(fn (Publikasi $item) => $item->kanal?->nama ?? 'Tanpa kanal')->sortDesc();
 
         return view('livewire.pusat-laporan', [

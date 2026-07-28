@@ -10,22 +10,27 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "dompdf/dompdf": "^3.1",
         "internachi/modular": "^3.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/flux": "^2.0",
         "livewire/volt": "^1.6.7",
         "modules/agenda": "*",
         "modules/ai": "*",
         "modules/content": "*",
         "modules/library": "*",
+        "modules/monitoring": "*",
         "modules/people": "*",
         "modules/planning": "*",
         "modules/publishing": "*",
         "modules/scheduling": "*",
         "modules/visual": "*",
         "modules/work": "*",
-        "smalot/pdfparser": "^2.12"
+        "phpoffice/phpspreadsheet": "^5.0",
+        "smalot/pdfparser": "^2.12",
+        "spatie/laravel-backup": "^9.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

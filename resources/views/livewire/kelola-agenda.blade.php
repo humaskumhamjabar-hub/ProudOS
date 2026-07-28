@@ -168,6 +168,17 @@
                         @error('peranId') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                     </label>
 
+                    <label class="block">
+                        <span class="mb-1.5 block text-sm font-medium text-zinc-800 dark:text-zinc-200">Pembimbing (wajib untuk magang)</span>
+                        <select wire:model="pembimbingId" class="w-full rounded-lg border-zinc-300 bg-white text-zinc-950 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
+                            <option value="">Tanpa pembimbing</option>
+                            @foreach ($anggota as $user)
+                                <option value="{{ $user->id }}">{{ $user->nama }}</option>
+                            @endforeach
+                        </select>
+                        @error('pembimbingId') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    </label>
+
                     @if (! $agendaTim->selesai_at)
                         <p id="agenda-tim-tanpa-selesai" role="status" class="text-sm text-amber-800 dark:text-amber-300">⚠ Agenda harus memiliki waktu selesai sebelum tim dapat ditugaskan.</p>
                         <button type="submit" disabled aria-describedby="agenda-tim-tanpa-selesai" class="rounded-lg bg-zinc-400 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70">Tambahkan anggota</button>
@@ -191,6 +202,7 @@
                                 <div>
                                     <p class="font-medium text-zinc-950 dark:text-white">{{ $namaAnggota[$tugas->user_id] ?? 'Anggota tidak ditemukan' }}</p>
                                     <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ $tugas->peran->nama }} · Status: {{ $tugas->status }}</p>
+                                    @if ($tugas->pembimbing_id)<p class="text-sm text-indigo-600 dark:text-indigo-300">Pembimbing: {{ $namaAnggota[$tugas->pembimbing_id] ?? 'Tidak ditemukan' }}</p>@endif
                                     <p class="text-sm text-zinc-500">
                                         {{ $tugas->diterima_at ? 'Diterima' : ($tugas->dibaca_at ? 'Sudah dibaca' : 'Belum dibaca') }}
                                     </p>

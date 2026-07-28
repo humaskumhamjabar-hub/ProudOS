@@ -4,6 +4,7 @@
             Kalender · {{ $awal->translatedFormat('F Y') }}
         </h1>
         <div class="flex gap-2">
+            @can('kelola_agenda')<button wire:click="unduhJadwalHarian" class="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white dark:bg-white dark:text-zinc-900">Cetak hari ini</button>@endcan
             <button wire:click="gantiBulan(-1)" class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-600 dark:hover:bg-zinc-800">‹ Sebelumnya</button>
             <button wire:click="gantiBulan(1)" class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-600 dark:hover:bg-zinc-800">Berikutnya ›</button>
         </div>

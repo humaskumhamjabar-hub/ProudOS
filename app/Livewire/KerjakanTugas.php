@@ -3,10 +3,13 @@
 namespace App\Livewire;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Modules\Agenda\Models\Agenda;
+use Modules\Content\Models\CatatanPembimbing;
+use Modules\People\Models\User;
 use Modules\Scheduling\Actions\KonfirmasiPenugasan;
 use Modules\Scheduling\Models\Penugasan;
 use Modules\Work\Models\Tugas;
@@ -27,9 +30,12 @@ class KerjakanTugas extends Component
 
     public string $komentarBaru = '';
 
+    public string $catatanPembimbingBaru = '';
+
     public function mount(int $tugasId, KonfirmasiPenugasan $konfirmasi): void
     {
         $this->tugas = Tugas::with(['bahan', 'komentar'])->findOrFail($tugasId);
+        Gate::authorize('lihat-tugas', $this->tugas);
 
         // Membuka layar kerja = penugasan terkait tercatat dibaca.
         Penugasan::where('user_id', Auth::id())
@@ -46,6 +52,8 @@ class KerjakanTugas extends Component
 
     public function mulaiKerjakan(): void
     {
+        $this->authorizeWork();
+
         if ($this->tugas->status === 'baru') {
             $this->tugas->update(['status' => 'dikerjakan']);
         }
@@ -53,11 +61,27 @@ class KerjakanTugas extends Component
 
     public function tandaiSelesai(): void
     {
-        $this->tugas->update(['status' => 'selesai']);
+        $this->authorizeWork();
+
+        Penugasan::query()
+            ->where('user_id', Auth::id())
+            ->where('untuk_type', 'tugas')
+            ->where('untuk_id', $this->tugas->id)
+            ->where('status', 'aktif')
+            ->update(['status' => 'selesai']);
+
+        if (! Penugasan::query()
+            ->where('untuk_type', 'tugas')
+            ->where('untuk_id', $this->tugas->id)
+            ->where('status', 'aktif')
+            ->exists()) {
+            $this->tugas->update(['status' => 'selesai']);
+        }
     }
 
     public function unggahBahan(): void
     {
+        $this->authorizeWork();
         $this->validate(['unggahan.*' => 'file|max:51200']);
 
         foreach ($this->unggahan as $file) {
@@ -77,6 +101,7 @@ class KerjakanTugas extends Component
 
     public function kirimKomentar(): void
     {
+        $this->authorizeWork();
         $this->validate(['komentarBaru' => 'required|string|max:2000']);
 
         $this->tugas->komentar()->create([
@@ -88,11 +113,63 @@ class KerjakanTugas extends Component
         $this->tugas->refresh();
     }
 
+    public function simpanCatatanPembimbing(): void
+    {
+        Gate::authorize('lihat-tugas', $this->tugas);
+        $this->validate(['catatanPembimbingBaru' => ['required', 'string', 'max:2000']]);
+
+        $penugasan = Penugasan::query()
+            ->where('untuk_type', 'tugas')
+            ->where('untuk_id', $this->tugas->id)
+            ->where('status', '!=', 'batal')
+            ->when(
+                ! Auth::user()->can('kelola_tugas'),
+                fn ($query) => $query->where('pembimbing_id', Auth::id()),
+            )
+            ->firstOrFail();
+
+        CatatanPembimbing::create([
+            'penugasan_id' => $penugasan->id,
+            'isi' => $this->catatanPembimbingBaru,
+            'oleh_id' => Auth::id(),
+        ]);
+
+        $this->catatanPembimbingBaru = '';
+    }
+
     public function render()
     {
         // Lapisan baca boleh melihat modul agenda untuk konteks kegiatan.
         $agenda = $this->tugas->agenda_id ? Agenda::find($this->tugas->agenda_id) : null;
 
-        return view('livewire.kerjakan-tugas', ['agenda' => $agenda]);
+        $penugasanQuery = Penugasan::query()
+            ->where('untuk_type', 'tugas')
+            ->where('untuk_id', $this->tugas->id)
+            ->where('status', '!=', 'batal');
+
+        if (! Auth::user()->can('kelola_tugas')) {
+            $penugasanQuery->where(fn ($query) => $query
+                ->where('user_id', Auth::id())
+                ->orWhere('pembimbing_id', Auth::id()));
+        }
+
+        $penugasanIds = $penugasanQuery->pluck('id');
+        $catatanPembimbing = CatatanPembimbing::whereIn('penugasan_id', $penugasanIds)->latest()->get();
+
+        return view('livewire.kerjakan-tugas', [
+            'agenda' => $agenda,
+            'catatanPembimbing' => $catatanPembimbing,
+            'namaPembimbing' => User::whereIn('id', $catatanPembimbing->pluck('oleh_id'))->pluck('nama', 'id'),
+            'bolehMemberiCatatan' => Auth::user()->can('kelola_tugas') || Penugasan::query()
+                ->whereIn('id', $penugasanIds)
+                ->where('pembimbing_id', Auth::id())
+                ->exists(),
+        ]);
+    }
+
+    private function authorizeWork(): void
+    {
+        $this->tugas = Tugas::with(['bahan', 'komentar'])->findOrFail($this->tugas->id);
+        Gate::authorize('kerjakan-tugas', $this->tugas);
     }
 }

