@@ -119,9 +119,12 @@
                             @endif
                         </p>
                     </div>
-                    <button wire:click="edit({{ $item->id }})" class="justify-self-start rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 opacity-100 hover:bg-zinc-50 sm:justify-self-end sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800">
-                        Ubah
-                    </button>
+                    <div class="flex gap-2 justify-self-start sm:justify-self-end">
+                        @can('kelola_penugasan')
+                            <button wire:click="aturTim({{ $item->id }})" type="button" class="rounded-lg border border-indigo-300 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950">Atur tim</button>
+                        @endcan
+                        <button wire:click="edit({{ $item->id }})" type="button" class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800">Ubah</button>
+                    </div>
                 </article>
             @empty
                 <div class="px-6 py-12 text-center">
@@ -132,4 +135,76 @@
             @endforelse
         </div>
     </section>
+
+    @if ($agendaTim)
+        <section aria-labelledby="tim-liputan-heading" class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-zinc-900">
+            <div class="border-b border-zinc-200 bg-indigo-50/70 px-5 py-4 dark:border-zinc-800 dark:bg-indigo-950/30">
+                <h2 id="tim-liputan-heading" class="font-semibold text-zinc-950 dark:text-white">Tim liputan</h2>
+                <p class="mt-0.5 text-sm text-zinc-600 dark:text-zinc-300">{{ $agendaTim->judul }}</p>
+            </div>
+
+            <div class="grid gap-6 p-5 lg:grid-cols-2">
+                <form wire:submit="simpanPenugasan" class="space-y-4">
+                    <label class="block">
+                        <span class="mb-1.5 block text-sm font-medium text-zinc-800 dark:text-zinc-200">Anggota</span>
+                        <select wire:model="anggotaId" class="w-full rounded-lg border-zinc-300 bg-white text-zinc-950 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
+                            <option value="">Pilih anggota</option>
+                            @foreach ($anggota as $user)
+                                <option value="{{ $user->id }}">{{ $user->nama }}</option>
+                            @endforeach
+                        </select>
+                        @error('anggotaId') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                        @error('user_id') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    </label>
+
+                    <label class="block">
+                        <span class="mb-1.5 block text-sm font-medium text-zinc-800 dark:text-zinc-200">Peran</span>
+                        <select wire:model="peranId" class="w-full rounded-lg border-zinc-300 bg-white text-zinc-950 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
+                            <option value="">Pilih peran</option>
+                            @foreach ($peran as $itemPeran)
+                                <option value="{{ $itemPeran->id }}">{{ $itemPeran->nama }}</option>
+                            @endforeach
+                        </select>
+                        @error('peranId') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    </label>
+
+                    @if (! $agendaTim->selesai_at)
+                        <p id="agenda-tim-tanpa-selesai" role="status" class="text-sm text-amber-800 dark:text-amber-300">⚠ Agenda harus memiliki waktu selesai sebelum tim dapat ditugaskan.</p>
+                        <button type="submit" disabled aria-describedby="agenda-tim-tanpa-selesai" class="rounded-lg bg-zinc-400 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70">Tambahkan anggota</button>
+                    @else
+                        <button type="submit" class="rounded-lg bg-zinc-950 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200">Tambahkan anggota</button>
+                    @endif
+
+                    @if ($bolehTerobos)
+                        <div role="alert" class="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200">
+                            <p>⚠ Anggota ini memiliki jadwal yang bentrok.</p>
+                            <button wire:click="terobosBentrok" wire:confirm="Terobos bentrok jadwal ini?" type="button" class="mt-3 rounded-lg bg-red-700 px-4 py-2 font-semibold text-white hover:bg-red-600">Terobos bentrok</button>
+                        </div>
+                    @endif
+                </form>
+
+                <div>
+                    <h3 class="font-medium text-zinc-950 dark:text-white">Anggota tim</h3>
+                    <ul class="mt-3 divide-y divide-zinc-200 dark:divide-zinc-800">
+                        @forelse ($penugasan as $tugas)
+                            <li class="flex items-start justify-between gap-4 py-3">
+                                <div>
+                                    <p class="font-medium text-zinc-950 dark:text-white">{{ $namaAnggota[$tugas->user_id] ?? 'Anggota tidak ditemukan' }}</p>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ $tugas->peran->nama }} · Status: {{ $tugas->status }}</p>
+                                    <p class="text-sm text-zinc-500">
+                                        {{ $tugas->diterima_at ? 'Diterima' : ($tugas->dibaca_at ? 'Sudah dibaca' : 'Belum dibaca') }}
+                                    </p>
+                                </div>
+                                @if ($tugas->status === 'aktif')
+                                    <button wire:click="batalkanPenugasan({{ $tugas->id }})" wire:confirm="Batalkan penugasan ini?" type="button" class="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950">Batalkan</button>
+                                @endif
+                            </li>
+                        @empty
+                            <li class="py-3 text-sm text-zinc-500">Belum ada anggota yang ditugaskan.</li>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </section>
+    @endif
 </div>

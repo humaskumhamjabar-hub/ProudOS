@@ -59,6 +59,197 @@ it('menolak operasi penugasan tanpa izin kelola penugasan', function () {
         ->assertForbidden();
 });
 
+it('menampilkan aksi atur tim hanya kepada pengelola penugasan dan tetap menampilkan ubah', function (bool $bolehMengaturTim) {
+    $user = penggunaAgenda(true, $bolehMengaturTim);
+    $agenda = Agenda::create([
+        'judul' => 'Agenda beraksi',
+        'mulai_at' => '2026-08-03 09:00:00',
+        'selesai_at' => '2026-08-03 11:00:00',
+        'status' => 'rencana',
+        'dibuat_oleh' => $user->id,
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test(KelolaAgenda::class)
+        ->assertSee('Ubah');
+
+    $bolehMengaturTim
+        ? $component->assertSee('Atur tim')->assertSeeHtml('wire:click="aturTim('.$agenda->id.')"')
+        : $component->assertDontSee('Atur tim')->assertDontSeeHtml('wire:click="aturTim('.$agenda->id.')"');
+})->with([
+    'pengelola penugasan' => [true],
+    'bukan pengelola penugasan' => [false],
+]);
+
+it('memasok pilihan anggota dan peran aktif terurut hanya saat panel tim dibuka', function () {
+    $koordinator = penggunaAgenda(true, true);
+    $zeta = User::create([
+        'nama' => 'Zeta Anggota',
+        'email' => 'zeta@example.com',
+        'password' => 'password',
+        'role_id' => $koordinator->role_id,
+        'status' => 'aktif',
+    ]);
+    $alfa = User::create([
+        'nama' => 'Alfa Anggota',
+        'email' => 'alfa@example.com',
+        'password' => 'password',
+        'role_id' => $koordinator->role_id,
+        'status' => 'aktif',
+    ]);
+    User::create([
+        'nama' => 'Anggota Nonaktif',
+        'email' => 'nonaktif@example.com',
+        'password' => 'password',
+        'role_id' => $koordinator->role_id,
+        'status' => 'nonaktif',
+    ]);
+    $dihapus = User::create([
+        'nama' => 'Anggota Dihapus',
+        'email' => 'dihapus@example.com',
+        'password' => 'password',
+        'role_id' => $koordinator->role_id,
+        'status' => 'aktif',
+    ]);
+    $dihapus->delete();
+    $terhapusHistoris = User::create([
+        'nama' => 'Anggota Historis Dihapus',
+        'email' => 'historis-dihapus@example.com',
+        'password' => 'password',
+        'role_id' => $koordinator->role_id,
+        'status' => 'aktif',
+    ]);
+    $videografer = PeranProduksi::create(['nama' => 'Videografer', 'slug' => 'videografer', 'aktif' => true]);
+    $editor = PeranProduksi::create(['nama' => 'Editor', 'slug' => 'editor', 'aktif' => true]);
+    PeranProduksi::create(['nama' => 'Peran Nonaktif', 'slug' => 'nonaktif', 'aktif' => false]);
+    $agenda = Agenda::create([
+        'judul' => 'Agenda pilihan tim',
+        'mulai_at' => '2026-08-03 09:00:00',
+        'selesai_at' => '2026-08-03 11:00:00',
+        'status' => 'rencana',
+        'dibuat_oleh' => $koordinator->id,
+    ]);
+    Penugasan::create([
+        'user_id' => $terhapusHistoris->id,
+        'peran_id' => $editor->id,
+        'tipe' => 'berjam',
+        'mulai_at' => $agenda->mulai_at,
+        'selesai_at' => $agenda->selesai_at,
+        'untuk_type' => 'agenda',
+        'untuk_id' => $agenda->id,
+        'status' => 'batal',
+    ]);
+    $terhapusHistoris->delete();
+
+    Livewire::actingAs($koordinator)
+        ->test(KelolaAgenda::class)
+        ->call('aturTim', $agenda->id)
+        ->assertViewHas('anggota', fn ($anggota) => $anggota->pluck('id')->all() === [$alfa->id, $koordinator->id, $zeta->id])
+        ->assertViewHas('peran', fn ($peran) => $peran->pluck('id')->all() === [$editor->id, $videografer->id])
+        ->assertSee('Tim liputan')
+        ->assertSeeHtml('wire:model="anggotaId"')
+        ->assertSeeHtml('wire:model="peranId"')
+        ->assertSeeHtml('wire:submit="simpanPenugasan"')
+        ->assertSee('Anggota Historis Dihapus')
+        ->assertDontSee('Anggota Nonaktif')
+        ->assertDontSee('Anggota Dihapus')
+        ->assertDontSee('Peran Nonaktif');
+});
+
+it('menampilkan riwayat penugasan agenda beserta konfirmasi dan hanya membatalkan yang aktif', function () {
+    $koordinator = penggunaAgenda(true, true);
+    $anggota = User::create([
+        'nama' => 'Anggota Riwayat',
+        'email' => 'anggota-riwayat@example.com',
+        'password' => 'password',
+        'role_id' => $koordinator->role_id,
+        'status' => 'aktif',
+    ]);
+    $anggotaLain = User::create([
+        'nama' => 'Anggota Agenda Lain',
+        'email' => 'anggota-lain@example.com',
+        'password' => 'password',
+        'role_id' => $koordinator->role_id,
+        'status' => 'nonaktif',
+    ]);
+    $peran = PeranProduksi::create(['nama' => 'Fotografer', 'slug' => 'fotografer', 'aktif' => true]);
+    $agenda = Agenda::create([
+        'judul' => 'Agenda dengan riwayat',
+        'mulai_at' => '2026-08-05 09:00:00',
+        'selesai_at' => '2026-08-05 11:00:00',
+        'status' => 'rencana',
+        'dibuat_oleh' => $koordinator->id,
+    ]);
+    $agendaLain = Agenda::create([
+        'judul' => 'Agenda lain',
+        'mulai_at' => '2026-08-06 09:00:00',
+        'selesai_at' => '2026-08-06 11:00:00',
+        'status' => 'rencana',
+        'dibuat_oleh' => $koordinator->id,
+    ]);
+    $aktif = Penugasan::create([
+        'user_id' => $anggota->id,
+        'peran_id' => $peran->id,
+        'tipe' => 'berjam',
+        'mulai_at' => $agenda->mulai_at,
+        'selesai_at' => $agenda->selesai_at,
+        'untuk_type' => 'agenda',
+        'untuk_id' => $agenda->id,
+        'status' => 'aktif',
+    ]);
+    $dibaca = Penugasan::create([
+        'user_id' => $anggota->id,
+        'peran_id' => $peran->id,
+        'tipe' => 'berjam',
+        'mulai_at' => $agenda->mulai_at,
+        'selesai_at' => $agenda->selesai_at,
+        'untuk_type' => 'agenda',
+        'untuk_id' => $agenda->id,
+        'status' => 'batal',
+        'dibaca_at' => now(),
+    ]);
+    $diterima = Penugasan::create([
+        'user_id' => $anggota->id,
+        'peran_id' => $peran->id,
+        'tipe' => 'berjam',
+        'mulai_at' => $agenda->mulai_at,
+        'selesai_at' => $agenda->selesai_at,
+        'untuk_type' => 'agenda',
+        'untuk_id' => $agenda->id,
+        'status' => 'selesai',
+        'dibaca_at' => now(),
+        'diterima_at' => now(),
+    ]);
+    Penugasan::create([
+        'user_id' => $anggotaLain->id,
+        'peran_id' => $peran->id,
+        'tipe' => 'berjam',
+        'mulai_at' => $agendaLain->mulai_at,
+        'selesai_at' => $agendaLain->selesai_at,
+        'untuk_type' => 'agenda',
+        'untuk_id' => $agendaLain->id,
+        'status' => 'aktif',
+    ]);
+
+    Livewire::actingAs($koordinator)
+        ->test(KelolaAgenda::class)
+        ->call('aturTim', $agenda->id)
+        ->assertViewHas('penugasan', fn ($penugasan) => $penugasan->pluck('id')->all() === [$aktif->id, $dibaca->id, $diterima->id])
+        ->assertSee('Anggota Riwayat')
+        ->assertSee('Fotografer')
+        ->assertSee('Status: aktif')
+        ->assertSee('Status: batal')
+        ->assertSee('Status: selesai')
+        ->assertSee('Belum dibaca')
+        ->assertSee('Sudah dibaca')
+        ->assertSee('Diterima')
+        ->assertDontSee('Anggota Agenda Lain')
+        ->assertSeeHtml('wire:click="batalkanPenugasan('.$aktif->id.')"')
+        ->assertSeeHtml('wire:confirm="Batalkan penugasan ini?"')
+        ->assertDontSeeHtml('wire:click="batalkanPenugasan('.$dibaca->id.')"')
+        ->assertDontSeeHtml('wire:click="batalkanPenugasan('.$diterima->id.')"');
+});
+
 it('membuat agenda bertanggal dan berkebutuhan humas', function () {
     $user = penggunaAgenda(true);
 
@@ -128,6 +319,8 @@ it('menolak penugasan agenda tanpa waktu selesai', function () {
     Livewire::actingAs($koordinator)
         ->test(KelolaAgenda::class)
         ->call('aturTim', $agenda->id)
+        ->assertSee('Agenda harus memiliki waktu selesai sebelum tim dapat ditugaskan.')
+        ->assertSeeHtml('<button type="submit" disabled aria-describedby="agenda-tim-tanpa-selesai"')
         ->set('anggotaId', $anggota->id)
         ->set('peranId', $peran->id)
         ->call('simpanPenugasan')
@@ -201,7 +394,11 @@ it('meminta konfirmasi sebelum menerobos bentrok penugasan', function () {
         ->set('peranId', $peran->id)
         ->call('simpanPenugasan')
         ->assertHasErrors(['user_id'])
-        ->assertSet('bolehTerobos', true);
+        ->assertSet('bolehTerobos', true)
+        ->assertSee('⚠')
+        ->assertSee('Anggota ini memiliki jadwal yang bentrok.')
+        ->assertSeeHtml('wire:click="terobosBentrok"')
+        ->assertSeeHtml('wire:confirm="Terobos bentrok jadwal ini?"');
 
     expect(Penugasan::count())->toBe(1);
 });
@@ -240,14 +437,17 @@ it('tidak bisa melewati konfirmasi bentrok lewat parameter method publik', funct
     expect(Penugasan::count())->toBe(1);
 });
 
-it('mengunci state konfirmasi terobos dari manipulasi client', function () {
+it('mengunci state server penugasan dari manipulasi client', function (string $properti, mixed $nilai) {
     $koordinator = penggunaAgenda(true, true);
 
     expect(fn () => Livewire::actingAs($koordinator)
         ->test(KelolaAgenda::class)
-        ->set('bolehTerobos', true))
+        ->set($properti, $nilai))
         ->toThrow(CannotUpdateLockedPropertyException::class);
-});
+})->with([
+    'konfirmasi terobos' => ['bolehTerobos', true],
+    'agenda aktif' => ['agendaTimId', 999],
+]);
 
 it('menerobos bentrok setelah dikonfirmasi dan mempertahankan jejak penggantian', function () {
     $koordinator = penggunaAgenda(true, true);
@@ -340,6 +540,37 @@ it('membatalkan penugasan hanya pada agenda yang sedang dibuka tanpa menghapusny
         ->and($penugasanLain->fresh()->status)->toBe('aktif')
         ->and(Penugasan::count())->toBe(2);
 });
+
+it('menolak pembatalan penugasan yang sudah tidak aktif', function (string $status) {
+    $koordinator = penggunaAgenda(true, true);
+    $anggota = penggunaAgenda(false);
+    $peran = PeranProduksi::create(['nama' => 'Fotografer', 'slug' => 'fotografer', 'aktif' => true]);
+    $agenda = Agenda::create([
+        'judul' => 'Agenda bersejarah',
+        'mulai_at' => '2026-08-05 09:00:00',
+        'selesai_at' => '2026-08-05 11:00:00',
+        'status' => 'selesai',
+        'dibuat_oleh' => $koordinator->id,
+    ]);
+    $penugasan = Penugasan::create([
+        'user_id' => $anggota->id,
+        'peran_id' => $peran->id,
+        'tipe' => 'berjam',
+        'mulai_at' => $agenda->mulai_at,
+        'selesai_at' => $agenda->selesai_at,
+        'untuk_type' => 'agenda',
+        'untuk_id' => $agenda->id,
+        'status' => $status,
+    ]);
+
+    expect(fn () => Livewire::actingAs($koordinator)
+        ->test(KelolaAgenda::class)
+        ->call('aturTim', $agenda->id)
+        ->call('batalkanPenugasan', $penugasan->id))
+        ->toThrow(ModelNotFoundException::class);
+
+    expect($penugasan->fresh()->status)->toBe($status);
+})->with(['selesai', 'butuh_pengganti', 'batal']);
 
 it('mengatur ulang konfirmasi terobos ketika pilihan penugasan berubah', function (string $properti) {
     $koordinator = penggunaAgenda(true, true);

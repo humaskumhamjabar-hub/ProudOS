@@ -38,6 +38,7 @@ class KelolaAgenda extends Component
 
     public string $filterStatus = 'aktif';
 
+    #[Locked]
     public ?int $agendaTimId = null;
 
     public int|string $anggotaId = '';
@@ -119,6 +120,7 @@ class KelolaAgenda extends Component
 
         Penugasan::where('untuk_type', 'agenda')
             ->where('untuk_id', $this->agendaTimId)
+            ->where('status', 'aktif')
             ->findOrFail($id)
             ->update(['status' => 'batal']);
     }
@@ -232,6 +234,19 @@ class KelolaAgenda extends Component
             ->orderBy('mulai_at')
             ->get();
 
-        return view('livewire.kelola-agenda', ['agenda' => $agenda]);
+        $agendaTim = $this->agendaTimId ? Agenda::findOrFail($this->agendaTimId) : null;
+        $penugasan = $agendaTim
+            ? Penugasan::with('peran')->where('untuk_type', 'agenda')->where('untuk_id', $agendaTim->id)->get()
+            : collect();
+
+        return view('livewire.kelola-agenda', [
+            'agenda' => $agenda,
+            'agendaTim' => $agendaTim,
+            'anggota' => $agendaTim ? User::where('status', 'aktif')->orderBy('nama')->get() : collect(),
+            'peran' => $agendaTim ? PeranProduksi::where('aktif', true)->orderBy('nama')->get() : collect(),
+            'penugasan' => $penugasan,
+            // ponytail: read names in one map; add the model relation only when another caller needs it.
+            'namaAnggota' => User::withTrashed()->whereIn('id', $penugasan->pluck('user_id'))->pluck('nama', 'id'),
+        ]);
     }
 }
