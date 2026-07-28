@@ -5,9 +5,15 @@ namespace App\Livewire;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Modules\Agenda\Models\Agenda;
+use Modules\People\Models\User;
+use Modules\Scheduling\Actions\BuatPenugasan;
+use Modules\Scheduling\Models\Penugasan;
+use Modules\Scheduling\Models\PeranProduksi;
 
 #[Layout('components.layouts.app')]
 class KelolaAgenda extends Component
@@ -32,9 +38,104 @@ class KelolaAgenda extends Component
 
     public string $filterStatus = 'aktif';
 
+    public ?int $agendaTimId = null;
+
+    public int|string $anggotaId = '';
+
+    public int|string $peranId = '';
+
+    #[Locked]
+    public bool $bolehTerobos = false;
+
     public function mount(): void
     {
         Gate::authorize('kelola_agenda');
+    }
+
+    public function aturTim(int $agendaId): void
+    {
+        Gate::authorize('kelola_penugasan');
+
+        $this->agendaTimId = Agenda::findOrFail($agendaId)->id;
+        $this->reset(['anggotaId', 'peranId', 'bolehTerobos']);
+    }
+
+    public function simpanPenugasan(BuatPenugasan $buat): void
+    {
+        $this->simpanPenugasanDengan($buat);
+    }
+
+    private function simpanPenugasanDengan(BuatPenugasan $buat, bool $terobos = false): void
+    {
+        Gate::authorize('kelola_penugasan');
+
+        $data = $this->validate([
+            'agendaTimId' => ['required', 'integer', 'exists:agendas,id'],
+            'anggotaId' => ['required', 'integer', Rule::exists('users', 'id')->where('status', 'aktif')->whereNull('deleted_at')],
+            'peranId' => ['required', 'integer', Rule::exists('peran_produksi', 'id')->where('aktif', true)],
+        ]);
+        $agenda = Agenda::findOrFail($data['agendaTimId']);
+
+        if (! $agenda->selesai_at) {
+            $this->addError('agendaTimId', 'Agenda harus memiliki waktu selesai sebelum tim ditugaskan.');
+
+            return;
+        }
+
+        try {
+            $buat->handle([
+                'user_id' => User::findOrFail($data['anggotaId'])->id,
+                'peran_id' => PeranProduksi::findOrFail($data['peranId'])->id,
+                'tipe' => 'berjam',
+                'mulai_at' => $agenda->mulai_at,
+                'selesai_at' => $agenda->selesai_at,
+                'untuk_type' => 'agenda',
+                'untuk_id' => $agenda->id,
+                'status' => 'aktif',
+            ], $terobos);
+            $this->bolehTerobos = false;
+        } catch (ValidationException $exception) {
+            if (str_starts_with($exception->errors()['user_id'][0] ?? '', 'Bentrok jam')) {
+                $this->bolehTerobos = true;
+            }
+
+            throw $exception;
+        }
+    }
+
+    public function terobosBentrok(BuatPenugasan $buat): void
+    {
+        Gate::authorize('kelola_penugasan');
+        abort_unless($this->bolehTerobos, 403);
+
+        // ponytail: bind confirmation to the current server-validated selection;
+        // add a signed nonce only if multiple concurrent editors become real.
+        $this->simpanPenugasanDengan($buat, true);
+    }
+
+    public function batalkanPenugasan(int $id): void
+    {
+        Gate::authorize('kelola_penugasan');
+
+        Penugasan::where('untuk_type', 'agenda')
+            ->where('untuk_id', $this->agendaTimId)
+            ->findOrFail($id)
+            ->update(['status' => 'batal']);
+    }
+
+    public function updatedAgendaTimId(): void
+    {
+        $this->bolehTerobos = false;
+    }
+
+    public function updatedAnggotaId(): void
+    {
+        $this->bolehTerobos = false;
+    }
+
+    public function updatedPeranId(): void
+    {
+        $this->bolehTerobos = false;
     }
 
     public function buat(): void
