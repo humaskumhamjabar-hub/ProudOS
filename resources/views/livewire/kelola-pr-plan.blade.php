@@ -1,6 +1,6 @@
-<div class="min-h-full bg-stone-50 text-stone-950 dark:bg-zinc-950 dark:text-white">
+<div data-proud-page>
     <div class="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-        <header class="relative overflow-hidden rounded-[1.75rem] border border-stone-200 bg-[#f6efe2] px-5 py-6 shadow-sm sm:px-7 sm:py-8 dark:border-zinc-800 dark:bg-zinc-900">
+        <header class="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white px-5 py-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:px-6">
             <div class="pointer-events-none absolute -right-12 -top-20 h-52 w-52 rounded-full border-[28px] border-orange-300/30 dark:border-orange-500/10"></div>
             <div class="pointer-events-none absolute bottom-0 right-28 h-px w-40 rotate-[-18deg] bg-orange-500/40"></div>
             <div class="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-stone-100 text-slate-950 dark:bg-zinc-950 dark:text-zinc-100"><main class="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-8">
+<div data-proud-page><main class="mx-auto max-w-4xl px-4 py-5 sm:px-6 sm:py-8">
     <header><p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Visual · Rilis 3</p><h1 class="mt-1 text-3xl font-black tracking-tight">Studio Video</h1><p class="mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-zinc-400">Buat MP4 vertikal 9:16 dari foto final. Durasi mengikuti template dan render berjalan di antrean.</p></header>
     @if(session('video-sukses'))<div role="status" class="mt-4 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">{{ session('video-sukses') }}</div>@endif
     @error('video')<div role="alert" class="mt-4 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{{ $message }}</div>@enderror

@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-stone-100 text-stone-950 dark:bg-zinc-950 dark:text-zinc-100">
+<div data-proud-page>
     <div class="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         <header class="flex items-end justify-between gap-4">
             <div><p class="text-xs font-bold uppercase tracking-[.16em] text-amber-700 dark:text-amber-400">Pedoman kerja</p><h1 class="mt-1 text-3xl font-black tracking-tight">Pustaka</h1><p class="mt-2 max-w-2xl text-sm leading-6 text-stone-600 dark:text-zinc-400">SOP, template, dan referensi tim tersedia di satu tempat, nyaman dibaca dari ponsel.</p></div>

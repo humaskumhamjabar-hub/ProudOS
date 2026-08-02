@@ -1,12 +1,12 @@
-<div class="min-h-screen bg-stone-100 text-stone-950 dark:bg-zinc-950 dark:text-zinc-100">
+<div data-proud-page>
     <div class="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         <header class="flex items-end justify-between gap-4">
             <div>
-                <p class="text-xs font-bold uppercase tracking-[.16em] text-emerald-700 dark:text-emerald-400">Alur kerja tim</p>
-                <h1 class="mt-1 text-3xl font-black tracking-tight">Kelola Tugas</h1>
+                <p class="text-xs font-semibold uppercase tracking-[.16em] text-indigo-600 dark:text-indigo-400">Alur kerja tim</p>
+                <h1 class="mt-1 text-3xl font-semibold tracking-tight">Kelola Tugas</h1>
                 <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-600 dark:text-zinc-400">Buat brief, tentukan tenggat, lalu pilih pelaksana. Tugas aktif langsung muncul di ponsel orang yang ditunjuk.</p>
             </div>
-            <button type="button" wire:click="buat" class="shrink-0 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+            <button type="button" wire:click="buat" class="shrink-0 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 Buat tugas
             </button>
         </header>
@@ -50,7 +50,7 @@
                     @endif
                     <div class="sm:col-span-2 flex justify-end gap-2 pt-2">
                         <button type="button" wire:click="tutupForm" class="rounded-xl px-4 py-2.5 text-sm font-bold text-stone-600 hover:bg-stone-100 dark:text-zinc-300 dark:hover:bg-zinc-800">Batal</button>
-                        <button type="submit" class="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50" wire:loading.attr="disabled" wire:target="simpan">Simpan tugas</button>
+                        <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50" wire:loading.attr="disabled" wire:target="simpan">Simpan tugas</button>
                     </div>
                 </form>
             </section>
@@ -58,10 +58,10 @@
 
         @if ($tugasTimId)
             @php($tugasAktif = $tugas->firstWhere('id', $tugasTimId))
-            <section class="mt-5 rounded-2xl border border-sky-300 bg-sky-50 p-4 dark:border-sky-900 dark:bg-sky-950/40 sm:p-6" aria-labelledby="pelaksana-title">
+            <section class="mt-5 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6" aria-labelledby="pelaksana-title">
                 <div class="flex items-start justify-between gap-3">
-                    <div><p class="text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300">Atur pelaksana</p><h2 id="pelaksana-title" class="mt-1 text-lg font-bold">{{ $tugasAktif?->judul }}</h2></div>
-                    <button type="button" wire:click="tutupPelaksana" class="rounded-lg px-3 py-2 text-sm font-medium hover:bg-sky-100 dark:hover:bg-sky-900">Tutup</button>
+                    <div><p class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Atur pelaksana</p><h2 id="pelaksana-title" class="mt-1 text-lg font-bold">{{ $tugasAktif?->judul }}</h2></div>
+                    <button type="button" wire:click="tutupPelaksana" class="rounded-lg px-3 py-2 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800">Tutup</button>
                 </div>
                 <form wire:submit="simpanPenugasan" class="mt-5 grid gap-4 sm:grid-cols-2">
                     <label class="text-sm font-semibold">Pelaksana
@@ -83,9 +83,9 @@
                     <label class="sm:col-span-2 text-sm font-semibold">Catatan untuk pelaksana
                         <textarea wire:model="catatanPenugasan" rows="2" class="mt-1.5 w-full rounded-xl border-sky-200 bg-white text-stone-950 focus:border-sky-600 focus:ring-sky-600 dark:border-sky-900 dark:bg-zinc-950 dark:text-white"></textarea>
                     </label>
-                    <div class="sm:col-span-2 flex justify-end"><button type="submit" class="rounded-xl bg-sky-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-sky-600">Tambahkan pelaksana</button></div>
+                    <div class="sm:col-span-2 flex justify-end"><button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">Tambahkan pelaksana</button></div>
                 </form>
-                <div class="mt-5 border-t border-sky-200 pt-4 dark:border-sky-900">
+                <div class="mt-5 border-t border-zinc-200 pt-4 dark:border-zinc-800">
                     <h3 class="text-sm font-bold">Pelaksana saat ini</h3>
                     <ul class="mt-2 space-y-2">
                         @forelse ($penugasan->get($tugasTimId, collect()) as $item)
@@ -94,7 +94,7 @@
                                 @if ($item->status === 'aktif')<button type="button" wire:click="batalkanPenugasan({{ $item->id }})" wire:confirm="Batalkan penugasan ini?" class="rounded-lg px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950">Batalkan</button>@else<span class="text-xs font-bold uppercase text-stone-400">{{ str_replace('_', ' ', $item->status) }}</span>@endif
                             </li>
                         @empty
-                            <li class="text-sm text-sky-800 dark:text-sky-200">Belum ada pelaksana.</li>
+                            <li class="text-sm text-zinc-500 dark:text-zinc-400">Belum ada pelaksana.</li>
                         @endforelse
                     </ul>
                 </div>
@@ -103,7 +103,7 @@
 
         <div class="mt-6 flex gap-2 overflow-x-auto pb-1" aria-label="Filter tugas">
             @foreach (['aktif' => 'Aktif', 'baru' => 'Baru', 'dikerjakan' => 'Dikerjakan', 'selesai' => 'Selesai', 'semua' => 'Semua'] as $nilai => $label)
-                <button type="button" wire:click="$set('filterStatus', '{{ $nilai }}')" class="min-w-fit rounded-full px-4 py-2 text-sm font-bold {{ $filterStatus === $nilai ? 'bg-stone-900 text-white dark:bg-white dark:text-zinc-950' : 'border border-stone-300 bg-white text-stone-600 hover:bg-stone-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300' }}">{{ $label }}</button>
+                <button type="button" wire:click="$set('filterStatus', '{{ $nilai }}')" class="min-w-fit rounded-full px-4 py-2 text-sm font-bold {{ $filterStatus === $nilai ? 'bg-indigo-600 text-white dark:bg-indigo-500' : 'border border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300' }}">{{ $label }}</button>
             @endforeach
         </div>
 
@@ -125,7 +125,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
                             <button type="button" wire:click="edit({{ $item->id }})" class="rounded-xl border border-stone-300 px-3 py-2 text-sm font-bold hover:bg-stone-50 dark:border-zinc-700 dark:hover:bg-zinc-800">Ubah</button>
-                            <button type="button" wire:click="aturPelaksana({{ $item->id }})" class="rounded-xl bg-sky-700 px-3 py-2 text-sm font-bold text-white hover:bg-sky-600">Pelaksana</button>
+                            <button type="button" wire:click="aturPelaksana({{ $item->id }})" class="rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Pelaksana</button>
                         </div>
                     </div>
                 </article>

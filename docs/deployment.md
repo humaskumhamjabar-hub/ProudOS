@@ -62,3 +62,33 @@ Sebelum go-live:
 6. Catat tanggal, operator, nama arsip, checksum, dan hasil uji.
 
 Go-live belum boleh dinyatakan siap sebelum latihan restore ini lulus.
+
+## Mengaktifkan AI melalui Mexia
+
+Superadmin mengelola konfigurasi utama dari **Referensi & Pengaturan → Pengaturan AI** atau **Settings → AI & Mexia**. API key dienkripsi di database, tidak ditampilkan kembali, dan halaman hanya tersedia bagi pengguna dengan izin `kelola_ai`.
+
+Nilai `.env` berikut bersifat opsional dan hanya menjadi fallback awal sebelum konfigurasi pertama disimpan melalui Settings. Untuk penggunaan normal, masukkan API key melalui halaman Pengaturan AI, bukan melalui `.env`:
+
+```dotenv
+AI_PROVIDER=openai_compatible
+AI_BASE_URL=https://router.mexia.me/v1
+AI_API_KEY=isi_api_key_mexia_di_sini
+AI_MODEL=isi_id_model_dari_mexia
+AI_TIMEOUT=90
+AI_PROMPT_VERSION=berita-atensi-v1
+```
+
+`AI_MODEL` harus memakai ID persis yang tersedia pada katalog Mexia dan mendukung `POST /v1/chat/completions`. Setelah mengubah `.env`, jalankan:
+
+```bash
+php artisan config:clear
+php artisan config:cache
+```
+
+Verifikasi konfigurasi tanpa mencetak API key:
+
+```bash
+php artisan tinker --execute="dump(['provider' => config('ai.provider'), 'base_url' => config('ai.base_url'), 'model' => config('ai.model'), 'api_key_configured' => filled(config('ai.api_key')), 'available' => app(Modules\\Ai\\Contracts\\PenyediaAi::class)->tersedia()]);"
+```
+
+Hasil yang diharapkan: `provider` bernilai `openai_compatible`, `api_key_configured` dan `available` bernilai `true`. Selanjutnya uji dari satu tugas contoh. Hasil AI selalu disimpan sebagai usulan terpisah dan harus ditinjau manusia sebelum menjadi draf.

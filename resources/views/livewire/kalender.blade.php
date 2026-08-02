@@ -1,14 +1,17 @@
-<div class="mx-auto max-w-6xl p-6">
-    <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-zinc-900 dark:text-white">
-            Kalender · {{ $awal->translatedFormat('F Y') }}
-        </h1>
-        <div class="flex gap-2">
+<div data-proud-page>
+  <main class="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+    <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-xs">Jadwal terpadu</p>
+            <h1>Kalender</h1>
+            <p class="mt-2 text-sm">{{ $awal->translatedFormat('F Y') }}, seluruh agenda tim dalam satu tampilan.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
             @can('kelola_agenda')<button wire:click="unduhJadwalHarian" class="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white dark:bg-white dark:text-zinc-900">Cetak hari ini</button>@endcan
             <button wire:click="gantiBulan(-1)" class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-600 dark:hover:bg-zinc-800">‹ Sebelumnya</button>
             <button wire:click="gantiBulan(1)" class="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-50 dark:border-zinc-600 dark:hover:bg-zinc-800">Berikutnya ›</button>
         </div>
-    </div>
+    </header>
 
     <div class="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-zinc-200 bg-zinc-200 dark:border-zinc-700 dark:bg-zinc-700">
         @foreach (['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $hari)
@@ -34,4 +37,5 @@
             </div>
         @endfor
     </div>
+  </main>
 </div>

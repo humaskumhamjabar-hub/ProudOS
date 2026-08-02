@@ -43,7 +43,7 @@ class StudioCarousel extends Component
         $this->paketId = $paket
             ? PaketKonten::findOrFail($paket)->id
             : PaketKonten::where('status', '!=', 'arsip')->latest('updated_at')->value('id');
-        $this->templateId = TemplateVisual::where('status', 'aktif')->where('format', 'ig_carousel')->value('id');
+        $this->templateId = TemplateVisual::where('status', 'aktif')->where('format', 'ig_carousel')->orderByDesc('versi')->orderByDesc('id')->value('id');
 
         if ($this->paketId) {
             $render = Render::where('paket_konten_id', $this->paketId)->latest()->first();

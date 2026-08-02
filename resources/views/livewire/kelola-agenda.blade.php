@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+<div data-proud-page class="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <p class="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">Ruang kendali</p>

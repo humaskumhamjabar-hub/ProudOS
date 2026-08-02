@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\LihatAsetTemplateVisualController;
+use App\Http\Controllers\LihatFotoTugasController;
+use App\Http\Controllers\LihatHasilCarouselTugasController;
 use App\Http\Controllers\ReadinessController;
 use App\Livewire\Beranda;
 use App\Livewire\Kalender;
@@ -13,6 +16,7 @@ use App\Livewire\KelolaTugas;
 use App\Livewire\KerjakanTugas;
 use App\Livewire\Monitoring;
 use App\Livewire\PapanKanban;
+use App\Livewire\PengaturanAi;
 use App\Livewire\PusatLaporan;
 use App\Livewire\Pustaka;
 use App\Livewire\StudioCarousel;
@@ -37,11 +41,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tugas', KelolaTugas::class)->name('tugas.index');
     Route::get('visual/carousel', StudioCarousel::class)->name('visual.carousel');
     Route::get('visual/template', KelolaTemplateVisual::class)->name('visual.template');
+    Route::get('visual/template/{template}/aset/{aset}', LihatAsetTemplateVisualController::class)->name('visual.template.aset');
     Route::get('visual/video', StudioVideo::class)->name('visual.video');
     Route::get('laporan', PusatLaporan::class)->name('laporan.index');
     Route::get('pustaka', Pustaka::class)->name('pustaka.index');
     Route::get('monitoring', Monitoring::class)->name('monitoring.index');
     Route::get('tugas/{tugasId}/kerjakan', KerjakanTugas::class)->name('tugas.kerjakan');
+    Route::get('tugas/{tugas}/bahan/{bahan}/foto', LihatFotoTugasController::class)->name('tugas.bahan.foto');
+    Route::get('tugas/{tugas}/carousel/{urutan}', LihatHasilCarouselTugasController::class)->name('tugas.carousel.hasil');
 
     Route::redirect('dashboard', '/')->name('dashboard');
 
@@ -49,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
+    Route::get('settings/ai', PengaturanAi::class)->name('settings.ai');
 });
 
 require __DIR__.'/auth.php';

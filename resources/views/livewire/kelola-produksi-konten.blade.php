@@ -1,15 +1,12 @@
-<div class="min-h-full bg-stone-50 text-stone-950 dark:bg-zinc-950 dark:text-white">
-    <div class="relative overflow-hidden border-b border-stone-200 bg-stone-950 text-white dark:border-zinc-800">
-        <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 80% 10%, #ea580c 0, transparent 24%), radial-gradient(circle at 12% 90%, #0369a1 0, transparent 26%);"></div>
-        <div class="relative mx-auto max-w-[1600px] px-5 py-9 sm:px-8 lg:px-10">
+<div data-proud-page>
+    <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+      <header>
+        <div>
             <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <div class="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-orange-300">
-                        <span class="h-px w-8 bg-orange-400"></span>
-                        Ruang kerja editorial
-                    </div>
+                    <p class="text-xs">Ruang kerja editorial</p>
                     <h1 class="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Meja Produksi</h1>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-300 sm:text-base">Tarik rencana yang sudah terjadwal, tulis draf tanpa kehilangan versi lama, lalu gerakkan kartu sampai siap ditinjau.</p>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">Tarik rencana yang sudah terjadwal, tulis draf tanpa kehilangan versi lama, lalu gerakkan kartu sampai siap ditinjau.</p>
                 </div>
                 <div class="grid grid-cols-3 divide-x divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
                     @foreach ([
@@ -19,12 +16,13 @@
                     ] as $ringkasan)
                         <div class="min-w-24 px-4 py-3 text-center sm:min-w-32">
                             <div class="text-xl font-semibold">{{ $ringkasan['nilai'] }}</div>
-                            <div class="mt-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-stone-400">{{ $ringkasan['label'] }}</div>
+                            <div class="mt-0.5 text-[0.62rem] font-bold uppercase tracking-wide text-zinc-500">{{ $ringkasan['label'] }}</div>
                         </div>
                     @endforeach
                 </div>
             </div>
         </div>
+      </header>
     </div>
 
     <div class="mx-auto max-w-[1600px] space-y-6 px-5 py-6 sm:px-8 lg:px-10">

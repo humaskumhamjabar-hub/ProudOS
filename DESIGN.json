@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-29T10:25:11+07:00",
+  "title": "Design System: PROUD",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Indigo Kerja",
+        "canonical": "#4f46e5",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#818cf8", "#c7d2fe", "#eef2ff"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Kanvas Terang",
+        "canonical": "#fafafa",
+        "tonalRamp": ["#171717", "#262626", "#404040", "#737373", "#a3a3a3", "#d4d4d4", "#f5f5f5", "#fafafa"]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Selesai",
+        "canonical": "#047857",
+        "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#10b981", "#6ee7b7", "#d1fae5", "#ecfdf5"]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Perlu Tindakan",
+        "canonical": "#b45309",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#f59e0b", "#fcd34d", "#fef3c7", "#fffbeb"]
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Gagal atau Destruktif",
+        "canonical": "#dc2626",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#dc2626", "#ef4444", "#fca5a5", "#fee2e2", "#fef2f2"]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Satu judul utama per halaman."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Isi, metadata, dan kontrol produk."
+      }
+    },
+    "shadows": [
+      {
+        "name": "surface-rest",
+        "value": "0 1px 2px rgb(0 0 0 / 0.05)",
+        "purpose": "Pemisahan sangat halus antara surface utama dan kanvas."
+      },
+      {
+        "name": "floating-overlay",
+        "value": "0 10px 25px rgb(0 0 0 / 0.10)",
+        "purpose": "Dropdown, popover, atau dialog sementara saja."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Hover, focus, dan perubahan state kecil."
+      },
+      {
+        "name": "state-standard",
+        "value": "200ms cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Reveal panel dan perubahan state yang lebih besar."
+      }
+    ],
+    "breakpoints": [
+      {"name": "sm", "value": "640px"},
+      {"name": "md", "value": "768px"},
+      {"name": "lg", "value": "1024px"},
+      {"name": "xl", "value": "1280px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Tindakan utama yang sama di seluruh halaman.",
+      "html": "<button class=\"ds-btn-primary\">Simpan</button>",
+      "css": ".ds-btn-primary { min-height: 40px; border: 0; border-radius: 8px; background: #4f46e5; color: #ffffff; padding: 10px 16px; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-primary:hover { background: #4338ca; } .ds-btn-primary:active { background: #3730a3; } .ds-btn-primary:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Tindakan pendamping tanpa bersaing dengan primary.",
+      "html": "<button class=\"ds-btn-secondary\">Batal</button>",
+      "css": ".ds-btn-secondary { min-height: 40px; border: 1px solid #e5e5e5; border-radius: 8px; background: #ffffff; color: #171717; padding: 10px 16px; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1), border-color 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-secondary:hover { background: #f5f5f5; border-color: #d4d4d4; } .ds-btn-secondary:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Field standar dengan fokus indigo yang konsisten.",
+      "html": "<label class=\"ds-field-label\">Judul<input class=\"ds-field\" placeholder=\"Masukkan judul\"></label>",
+      "css": ".ds-field-label { display: grid; gap: 6px; color: #171717; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; } .ds-field { min-height: 42px; border: 1px solid #d4d4d4; border-radius: 12px; background: #ffffff; color: #171717; padding: 10px 12px; font: 400 14px/1.5 'Instrument Sans', system-ui, sans-serif; } .ds-field:hover { border-color: #a3a3a3; } .ds-field:focus-visible { border-color: #4f46e5; outline: 2px solid #4f46e5; outline-offset: 1px; }"
+    },
+    {
+      "name": "Page Header",
+      "kind": "custom",
+      "refersTo": "page-header",
+      "description": "Pembuka halaman yang seragam dan bebas ornamen.",
+      "html": "<header class=\"ds-page-header\"><p class=\"ds-eyebrow\">PERENCANAAN</p><h1>Kelola Agenda</h1><p>Atur agenda dan kebutuhan tim dalam satu layar.</p></header>",
+      "css": ".ds-page-header { border: 1px solid #e5e5e5; border-radius: 16px; background: #ffffff; color: #171717; padding: 20px 24px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); font-family: 'Instrument Sans', system-ui, sans-serif; } .ds-page-header h1 { margin: 4px 0 0; font-size: 30px; line-height: 1.25; font-weight: 600; letter-spacing: -0.025em; } .ds-page-header p:last-child { max-width: 70ch; margin: 8px 0 0; color: #737373; font-size: 14px; line-height: 1.5; } .ds-eyebrow { margin: 0; color: #4f46e5; font-size: 12px; line-height: 1.25; font-weight: 600; letter-spacing: 0.16em; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "status-success",
+      "description": "Status ringkas yang tidak bergantung pada warna saja.",
+      "html": "<span class=\"ds-status-success\">Selesai</span>",
+      "css": ".ds-status-success { display: inline-flex; min-height: 24px; align-items: center; border: 1px solid #a7f3d0; border-radius: 9999px; background: #ecfdf5; color: #047857; padding: 3px 10px; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 12px; line-height: 1.25; font-weight: 600; }"
+    },
+    {
+      "name": "Content Surface",
+      "kind": "card",
+      "refersTo": "content-surface",
+      "description": "Surface standar untuk panel, formulir, dan kelompok data.",
+      "html": "<section class=\"ds-surface\"><h2>Rincian tugas</h2><p>Informasi kerja ditempatkan di dalam satu surface yang tenang.</p></section>",
+      "css": ".ds-surface { border: 1px solid #e5e5e5; border-radius: 16px; background: #ffffff; color: #171717; padding: 20px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05); font-family: 'Instrument Sans', system-ui, sans-serif; } .ds-surface h2 { margin: 0; font-size: 18px; line-height: 1.4; font-weight: 600; letter-spacing: -0.01em; } .ds-surface p { max-width: 70ch; margin: 8px 0 0; color: #737373; font-size: 14px; line-height: 1.5; }"
+    },
+    {
+      "name": "Sidebar Item",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "Item navigasi aktif tanpa stripe atau dekorasi tambahan.",
+      "html": "<a class=\"ds-nav-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 11.5 12 4l9 7.5v8a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5V14H9v5.5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linejoin=\"round\"/></svg>Beranda</a>",
+      "css": ".ds-nav-active { display: flex; min-height: 40px; align-items: center; gap: 10px; border-radius: 8px; background: #eef2ff; color: #4f46e5; padding: 8px 10px; text-decoration: none; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; } .ds-nav-active svg { width: 18px; height: 18px; } .ds-nav-active:hover { background: #e0e7ff; } .ds-nav-active:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Ruang Kerja Kanwil",
+    "overview": "PROUD terasa seperti meja kerja bersama yang rapi di tengah ritme Humas yang cepat. Antarmuka tenang, terang, langsung menunjukkan pekerjaan berikutnya, dan memakai satu keluarga visual di seluruh halaman.",
+    "keyCharacteristics": [
+      "Satu keluarga visual di seluruh halaman.",
+      "Palet restrained: netral zinc dengan indigo sebagai satu-satunya aksen interaksi utama.",
+      "Hierarki berbasis tipografi, ruang, dan border tipis.",
+      "Mobile-first dengan target sentuh minimum 40px.",
+      "Status tidak pernah bergantung pada warna saja."
+    ],
+    "rules": [
+      {"name": "The One Shell Rule", "body": "Setiap layar terautentikasi memakai kanvas, lebar konten, padding responsif, sidebar, dan pola header yang sama.", "section": "overview"},
+      {"name": "The One Accent Rule", "body": "Indigo adalah warna interaksi utama di semua modul.", "section": "colors"},
+      {"name": "The Sans-Only Rule", "body": "Semua layar aplikasi memakai Instrument Sans.", "section": "typography"},
+      {"name": "The Flat-by-Default Rule", "body": "Bayangan besar dan glow dilarang untuk halaman serta kartu biasa.", "section": "elevation"},
+      {"name": "The Same Job, Same Component Rule", "body": "Fungsi yang sama harus memiliki bentuk serta state yang sama di semua halaman.", "section": "components"}
+    ],
+    "dos": [
+      "Do gunakan Indigo Kerja untuk seluruh tindakan utama, focus ring, navigasi aktif, dan pilihan aktif.",
+      "Do gunakan header standar beradius 16px, border 1px, padding 20–24px, dan bayangan sangat halus.",
+      "Do gunakan spacing berbasis 4px dan Instrument Sans pada seluruh UI.",
+      "Do uji setiap halaman pada lebar 390px serta desktop."
+    ],
+    "donts": [
+      "Don't membuat dashboard korporat yang padat ornamen atau tampilan SaaS generik.",
+      "Don't memakai warna berbeda sebagai tema primary per modul.",
+      "Don't menggunakan font serif, font black, gradient dekoratif, glassmorphism, atau bayangan besar.",
+      "Don't menambahkan token atau pola komponen baru langsung di view."
+    ]
+  }
+}

@@ -1,19 +1,18 @@
-<div class="min-h-full bg-stone-50 text-stone-950 dark:bg-zinc-950 dark:text-white">
-    <header class="relative overflow-hidden border-b border-stone-200 bg-[#10251f] text-white dark:border-zinc-800">
-        <div class="absolute inset-0 opacity-30" style="background-image: linear-gradient(115deg, transparent 48%, rgba(52,211,153,.18) 48%, rgba(52,211,153,.18) 50%, transparent 50%), radial-gradient(circle at 12% 20%, #f97316 0, transparent 24%);"></div>
+<div data-proud-page>
+    <header class="relative mx-auto mt-6 w-[calc(100%-2rem)] max-w-7xl overflow-hidden rounded-2xl border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 sm:w-[calc(100%-3rem)] lg:w-[calc(100%-4rem)]">
         <div class="relative mx-auto max-w-[1500px] px-5 py-9 sm:px-8 lg:px-10">
             <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                 <div>
-                    <div class="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-emerald-300"><span class="h-px w-8 bg-emerald-400"></span>Bukti kerja yang bertahan</div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Bukti kerja yang bertahan</p>
                     <h1 class="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Publikasi & Arsip</h1>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-300 sm:text-base">Simpan tautan, kanal, PIC, dan tangkapan layar tayang dalam satu catatan sebelum pekerjaan resmi ditutup.</p>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base dark:text-zinc-400">Simpan tautan, kanal, PIC, dan tangkapan layar tayang dalam satu catatan sebelum pekerjaan resmi ditutup.</p>
                 </div>
                 <div class="flex gap-3">
-                    <div class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-3 dark:border-zinc-700 dark:bg-zinc-950">
                         <div class="text-2xl font-semibold">{{ $paketReview->count() }}</div>
                         <div class="text-[0.65rem] font-bold uppercase tracking-wide text-stone-400">Siap tayang</div>
                     </div>
-                    <div class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
+                    <div class="rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-3 dark:border-zinc-700 dark:bg-zinc-950">
                         <div class="text-2xl font-semibold">{{ $publikasi->count() }}</div>
                         <div class="text-[0.65rem] font-bold uppercase tracking-wide text-stone-400">Diarsipkan</div>
                     </div>
@@ -32,12 +31,12 @@
         <div class="grid gap-6 xl:grid-cols-[minmax(280px,.62fr)_minmax(420px,1fr)_minmax(330px,.76fr)]">
             <section>
                 <div class="mb-4 px-1">
-                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-orange-600">Review selesai</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">Review selesai</p>
                     <h2 class="mt-1 text-xl font-semibold">Siap dipublikasikan</h2>
                 </div>
                 <div class="space-y-3">
                     @forelse ($paketReview as $paket)
-                        <button wire:key="review-{{ $paket->id }}" wire:click="pilihPaket({{ $paket->id }})" class="w-full rounded-2xl border bg-white p-4 text-left shadow-sm transition {{ $paketAktif?->id === $paket->id && ! $publikasiId ? 'border-orange-400 ring-2 ring-orange-100 dark:border-orange-600 dark:ring-orange-950' : 'border-stone-200 hover:border-orange-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-orange-900' }}">
+                        <button wire:key="review-{{ $paket->id }}" wire:click="pilihPaket({{ $paket->id }})" class="w-full rounded-2xl border bg-white p-4 text-left shadow-sm transition {{ $paketAktif?->id === $paket->id && ! $publikasiId ? 'border-indigo-500 ring-2 ring-indigo-100 dark:border-indigo-500 dark:ring-indigo-950' : 'border-zinc-200 hover:border-indigo-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-indigo-800' }}">
                             <div class="flex items-center justify-between gap-3 text-[0.66rem] font-bold uppercase tracking-wide text-stone-400">
                                 <span>Paket #{{ $paket->id }}</span><span>Revisi {{ $paket->revisi_ke }}</span>
                             </div>
@@ -57,10 +56,10 @@
             <main>
                 @if ($paketAktif)
                     <section class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-xl shadow-stone-950/5 dark:border-zinc-800 dark:bg-zinc-900">
-                        <div class="border-b border-stone-200 bg-stone-950 p-5 text-white dark:border-zinc-800 sm:p-6">
+                        <div class="border-b border-zinc-200 bg-zinc-50 p-5 text-zinc-950 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 sm:p-6">
                             <div class="flex items-start justify-between gap-4">
                                 <div>
-                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-orange-400">{{ $publikasiId ? 'Perbarui jejak tayang' : 'Finalisasi publikasi' }}</p>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">{{ $publikasiId ? 'Perbarui jejak tayang' : 'Finalisasi publikasi' }}</p>
                                     <h2 class="mt-2 text-xl font-semibold leading-7">{{ $paketAktif->judul }}</h2>
                                 </div>
                                 @if ($publikasiId)
@@ -93,7 +92,7 @@
                             </label>
                             <label class="sm:col-span-2">
                                 <span class="mb-1.5 block text-sm font-semibold">Tangkapan layar tayang {{ $publikasiId ? '(opsional jika tidak diganti)' : '' }}</span>
-                                <input wire:model="buktiTayang" type="file" accept="image/png,image/jpeg,image/webp" class="block w-full rounded-xl border border-stone-300 bg-stone-50 text-sm file:mr-4 file:border-0 file:bg-stone-950 file:px-4 file:py-2.5 file:font-semibold file:text-white dark:border-zinc-700 dark:bg-zinc-950 dark:file:bg-orange-500 dark:file:text-zinc-950">
+                                <input wire:model="buktiTayang" type="file" accept="image/png,image/jpeg,image/webp" class="block w-full rounded-xl border border-zinc-300 bg-zinc-50 text-sm file:mr-4 file:border-0 file:bg-indigo-600 file:px-4 file:py-2.5 file:font-semibold file:text-white dark:border-zinc-700 dark:bg-zinc-950 dark:file:bg-indigo-500 dark:file:text-white">
                                 <span class="mt-1 block text-xs text-stone-500">PNG, JPG, atau WebP · maksimal 5 MB.</span>
                                 @error('buktiTayang') <span class="mt-1 block text-sm text-red-600">{{ $message }}</span> @enderror
                             </label>
@@ -119,13 +118,13 @@
 
                             <div class="flex items-center justify-between gap-4 border-t border-stone-200 pt-5 sm:col-span-2 dark:border-zinc-800">
                                 <p class="max-w-xs text-xs leading-5 text-stone-500">Jejak ini menjadi sumber laporan dan bukti arsip, bukan sekadar checklist.</p>
-                                <button type="submit" wire:loading.attr="disabled" class="rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50">{{ $publikasiId ? 'Simpan perubahan' : 'Catat & arsipkan' }}</button>
+                                <button type="submit" wire:loading.attr="disabled" class="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{{ $publikasiId ? 'Simpan perubahan' : 'Catat & arsipkan' }}</button>
                             </div>
                         </form>
                     </section>
                 @else
                     <section class="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-20 text-center dark:border-zinc-700 dark:bg-zinc-900">
-                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-xl text-orange-700 dark:bg-orange-950 dark:text-orange-300">↗</div>
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-xl text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">↗</div>
                         <h2 class="mt-4 font-semibold">Pilih paket siap tayang</h2>
                         <p class="mx-auto mt-1 max-w-sm text-sm leading-6 text-stone-500">Form publikasi terbuka setelah memilih pekerjaan dari antrean Review.</p>
                     </section>

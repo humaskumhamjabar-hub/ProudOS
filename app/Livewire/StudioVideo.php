@@ -25,7 +25,7 @@ class StudioVideo extends Component
         $this->paketId = $paket
             ? PaketKonten::whereKey($paket)->where('status', '!=', 'arsip')->valueOrFail('id')
             : PaketKonten::where('status', '!=', 'arsip')->latest('updated_at')->value('id');
-        $this->templateId = TemplateVisual::where('status', 'aktif')->where('format', 'video_vertikal')->value('id');
+        $this->templateId = TemplateVisual::where('status', 'aktif')->where('format', 'video_vertikal')->orderByDesc('versi')->orderByDesc('id')->value('id');
     }
 
     public function buatVideo(): void

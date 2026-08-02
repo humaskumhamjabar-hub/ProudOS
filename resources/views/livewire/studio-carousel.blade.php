@@ -1,16 +1,16 @@
-<div class="min-h-screen bg-[#e8e1d2] text-[#13252d] dark:bg-zinc-950 dark:text-zinc-100">
+<div data-proud-page>
     <div class="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-        <header class="overflow-hidden rounded-[2rem] bg-[#102731] text-white shadow-2xl shadow-slate-950/15">
+        <header class="overflow-hidden rounded-2xl border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100">
             <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
                 <div>
-                    <p class="text-xs font-black uppercase tracking-[0.24em] text-amber-300">Visual desk · Rilis 2</p>
-                    <h1 class="mt-3 font-serif text-4xl leading-none tracking-tight sm:text-5xl">Studio Carousel</h1>
-                    <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-300">Satu cover, slide isi sebanyak foto final. Atur crop dan naskah di sini; keluaran final berupa PNG 4:5 dalam satu ZIP.</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Visual desk · Rilis 2</p>
+                    <h1>Studio Carousel</h1>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">Satu cover, slide isi sebanyak foto final. Atur crop dan naskah di sini; keluaran final berupa PNG 4:5 dalam satu ZIP.</p>
                 </div>
-                <div class="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 text-center">
-                    <div class="bg-[#102731] px-5 py-3"><strong class="block text-xl">4:5</strong><span class="text-[.65rem] uppercase tracking-wider text-slate-400">Rasio</span></div>
-                    <div class="bg-[#102731] px-5 py-3"><strong class="block text-xl">PNG</strong><span class="text-[.65rem] uppercase tracking-wider text-slate-400">Format</span></div>
-                    <div class="bg-[#102731] px-5 py-3"><strong class="block text-xl">ZIP</strong><span class="text-[.65rem] uppercase tracking-wider text-slate-400">Paket</span></div>
+                <div class="grid grid-cols-3 divide-x divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 text-center dark:divide-zinc-700 dark:border-zinc-700 dark:bg-zinc-950">
+                    <div class="px-5 py-3"><strong class="block text-xl">4:5</strong><span class="text-[.65rem] uppercase tracking-wider text-zinc-500">Rasio</span></div>
+                    <div class="px-5 py-3"><strong class="block text-xl">PNG</strong><span class="text-[.65rem] uppercase tracking-wider text-zinc-500">Format</span></div>
+                    <div class="px-5 py-3"><strong class="block text-xl">ZIP</strong><span class="text-[.65rem] uppercase tracking-wider text-zinc-500">Paket</span></div>
                 </div>
             </div>
         </header>
@@ -22,11 +22,11 @@
 
         <div class="mt-6 grid gap-6 xl:grid-cols-[270px_minmax(460px,1fr)_360px]">
             <aside class="space-y-4">
-                <section class="rounded-3xl border border-stone-300 bg-[#f5f0e7] p-4 shadow-lg shadow-stone-950/5 dark:border-zinc-800 dark:bg-zinc-900">
-                    <p class="text-[.68rem] font-black uppercase tracking-[.18em] text-stone-500">Paket aktif</p>
+                <section class="rounded-3xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+                    <p class="text-[.68rem] font-semibold uppercase tracking-[.18em] text-zinc-500">Paket aktif</p>
                     <div class="mt-3 space-y-2">
                         @foreach ($paket as $item)
-                            <button type="button" wire:click="pilihPaket({{ $item->id }})" wire:key="paket-visual-{{ $item->id }}" class="w-full rounded-2xl border p-3 text-left transition {{ $paketId === $item->id ? 'border-amber-500 bg-white shadow-sm dark:bg-zinc-950' : 'border-transparent hover:border-stone-300 hover:bg-white/70 dark:hover:border-zinc-700 dark:hover:bg-zinc-950' }}">
+                            <button type="button" wire:click="pilihPaket({{ $item->id }})" wire:key="paket-visual-{{ $item->id }}" class="w-full rounded-2xl border p-3 text-left transition {{ $paketId === $item->id ? 'border-indigo-500 bg-indigo-50 shadow-sm dark:bg-indigo-950/30' : 'border-transparent hover:border-zinc-300 hover:bg-zinc-50 dark:hover:border-zinc-700 dark:hover:bg-zinc-950' }}">
                                 <span class="block text-sm font-bold leading-5">{{ $item->judul }}</span>
                                 <span class="mt-1 block text-[.65rem] uppercase tracking-wider text-stone-400">{{ str($item->status)->replace('_', ' ') }}</span>
                             </button>
@@ -43,7 +43,7 @@
                                 @endforeach
                             </select>
                         </label>
-                        <button type="button" wire:click="siapkanCarousel" wire:loading.attr="disabled" class="mt-3 w-full rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-amber-950 hover:bg-amber-300 disabled:opacity-50">Siapkan carousel baru</button>
+                        <button type="button" wire:click="siapkanCarousel" wire:loading.attr="disabled" class="mt-3 w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">Siapkan carousel baru</button>
                         <p class="mt-2 text-[.68rem] leading-5 text-stone-500">Mengambil foto yang sudah ditandai “dipakai final” di Meja Produksi.</p>
                     </section>
                 @endif
@@ -51,7 +51,7 @@
 
             <main class="min-w-0">
                 @if ($renderAktif && $slideAktif)
-                    <section class="rounded-[2rem] border border-stone-300 bg-[#cec5b4] p-4 shadow-xl shadow-stone-950/10 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+                    <section class="rounded-[2rem] border border-zinc-200 bg-white p-4 shadow-xl dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
                         <div class="mx-auto aspect-[4/5] max-h-[760px] overflow-hidden rounded-2xl bg-[#102731] shadow-2xl" style="container-type: inline-size">
                             <div class="relative h-full w-full overflow-hidden text-white">
                                 @if ($fotoPreview)
@@ -110,16 +110,16 @@
                                     <input wire:model.live="{{ $model }}" type="range" min="{{ $min }}" max="{{ $max }}" step="{{ $step }}" class="mt-2 w-full accent-amber-500">
                                 </label>
                             @endforeach
-                            <button type="button" wire:click="simpanSlide" class="w-full rounded-xl bg-[#102731] px-4 py-2.5 text-xs font-black text-white hover:bg-amber-700">Simpan komposisi</button>
+                            <button type="button" wire:click="simpanSlide" class="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700">Simpan komposisi</button>
                         </div>
                     </section>
                 @endif
 
                 @if ($renderAktif)
-                    <section class="rounded-3xl border border-stone-300 bg-[#f5f0e7] p-5 dark:border-zinc-800 dark:bg-zinc-900">
+                    <section class="rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
                         <div class="flex items-center justify-between gap-3"><p class="text-xs font-black uppercase tracking-wider">Hasil render</p><span class="rounded-full bg-white px-2 py-1 text-[.62rem] font-bold dark:bg-zinc-950">{{ str($renderAktif->status)->title() }}</span></div>
                         @if ($renderAktif->status === 'selesai')
-                            <button wire:click="unduhHasil({{ $renderAktif->id }})" class="mt-3 w-full rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-black text-white hover:bg-emerald-600">Unduh ZIP PNG</button>
+                            <button wire:click="unduhHasil({{ $renderAktif->id }})" class="mt-3 w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700">Unduh ZIP PNG</button>
                         @else
                             <button wire:click="renderUlang" wire:loading.attr="disabled" class="mt-3 w-full rounded-xl border border-stone-400 px-4 py-2.5 text-xs font-black hover:bg-white dark:border-zinc-700 dark:hover:bg-zinc-950">Render ulang</button>
                         @endif

@@ -4,6 +4,9 @@
             <flux:navlist.item href="{{ route('settings.profile') }}" wire:navigate>Profile</flux:navlist.item>
             <flux:navlist.item href="{{ route('settings.password') }}" wire:navigate>Password</flux:navlist.item>
             <flux:navlist.item href="{{ route('settings.appearance') }}" wire:navigate>Appearance</flux:navlist.item>
+            @can('kelola_ai')
+                <flux:navlist.item href="{{ route('settings.ai') }}" wire:navigate>AI & Mexia</flux:navlist.item>
+            @endcan
         </flux:navlist>
     </div>
 

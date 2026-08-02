@@ -4,6 +4,7 @@ namespace Modules\Ai\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Modules\Ai\Contracts\PenyediaAi;
+use Modules\Ai\Services\KonfigurasiAiAktif;
 use Modules\Ai\Services\PenyediaAiNonaktif;
 use Modules\Ai\Services\PenyediaAiOpenAiCompatible;
 
@@ -13,7 +14,9 @@ class AiServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/ai.php', 'ai');
         $this->app->bind(PenyediaAi::class, function ($app): PenyediaAi {
-            if (config('ai.provider') === 'openai_compatible') {
+            $konfigurasi = $app->make(KonfigurasiAiAktif::class)->get();
+
+            if ($konfigurasi['provider'] === 'openai_compatible') {
                 return $app->make(PenyediaAiOpenAiCompatible::class);
             }
 

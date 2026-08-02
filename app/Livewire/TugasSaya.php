@@ -17,6 +17,15 @@ class TugasSaya extends Component
         $penugasan = Penugasan::with('peran')
             ->where('user_id', Auth::id())
             ->aktif()
+            ->where(function ($query) {
+                $query->where('untuk_type', '!=', 'tugas')
+                    ->orWhereExists(function ($subquery) {
+                        $subquery->selectRaw('1')
+                            ->from('tugas')
+                            ->whereColumn('tugas.id', 'penugasans.untuk_id')
+                            ->where('tugas.status', '!=', 'selesai');
+                    });
+            })
             ->orderByRaw('coalesce(mulai_at, deadline_at)')
             ->get();
 

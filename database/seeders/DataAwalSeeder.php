@@ -32,12 +32,13 @@ class DataAwalSeeder extends Seeder
             ['nama' => 'Kelola template visual', 'slug' => 'kelola_template_visual'],
             ['nama' => 'Kelola monitoring', 'slug' => 'kelola_monitoring'],
             ['nama' => 'Lihat laporan', 'slug' => 'lihat_laporan'],
+            ['nama' => 'Kelola AI', 'slug' => 'kelola_ai'],
         ] as $perm) {
             DB::table('permissions')->updateOrInsert(['slug' => $perm['slug']], $perm + ['created_at' => $now, 'updated_at' => $now]);
         }
 
         $izinPerRole = [
-            'admin' => ['kelola_pengguna', 'kelola_agenda', 'kelola_pr_plan', 'kelola_konten', 'kelola_penugasan', 'kelola_tugas', 'upload_publikasi', 'kelola_pustaka', 'kelola_template_visual', 'kelola_monitoring', 'lihat_laporan'],
+            'admin' => ['kelola_pengguna', 'kelola_agenda', 'kelola_pr_plan', 'kelola_konten', 'kelola_penugasan', 'kelola_tugas', 'upload_publikasi', 'kelola_pustaka', 'kelola_template_visual', 'kelola_monitoring', 'lihat_laporan', 'kelola_ai'],
             'koordinator' => ['kelola_agenda', 'kelola_pr_plan', 'kelola_konten', 'kelola_penugasan', 'kelola_tugas', 'upload_publikasi', 'kelola_pustaka', 'kelola_monitoring', 'lihat_laporan'],
             'staf' => ['upload_publikasi'],
             'magang' => [],

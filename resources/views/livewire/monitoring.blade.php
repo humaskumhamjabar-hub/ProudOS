@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-stone-100 text-slate-950 dark:bg-zinc-950 dark:text-zinc-100">
+<div data-proud-page>
     <main class="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8">
         <header class="flex items-end justify-between gap-4">
             <div><p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Reputasi publik</p><h1 class="mt-1 text-3xl font-black tracking-tight">Monitoring</h1><p class="mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-zinc-400">Catat temuan, tentukan PIC, lalu selesaikan tindak lanjut tanpa pindah layar.</p></div>
