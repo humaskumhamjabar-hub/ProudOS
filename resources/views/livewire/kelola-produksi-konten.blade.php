@@ -117,6 +117,9 @@
                                         </button>
 
                                         <div class="mt-4 flex flex-wrap gap-2 border-t border-stone-100 pt-3 dark:border-zinc-800">
+                                            @can('kelola_penugasan')
+                                                <button wire:click="aturTim({{ $konten->id }})" class="rounded-lg border border-indigo-300 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-indigo-800 dark:bg-zinc-950 dark:text-indigo-300 dark:hover:bg-indigo-950">Atur tim</button>
+                                            @endcan
                                             @if ($konten->status === 'on_progress')
                                                 <button wire:click="ubahStatus({{ $konten->id }}, 'finish_production')" class="rounded-full bg-sky-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-600">Selesai produksi →</button>
                                             @elseif ($konten->status === 'finish_production')
@@ -139,7 +142,80 @@
                 </div>
             </section>
 
-            <aside class="min-w-0">
+            @if ($paketTimId)
+                <section aria-labelledby="tim-paket-title" class="mt-6 overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-zinc-900 xl:col-span-2 xl:row-start-2">
+                    <div class="flex items-start justify-between gap-4 border-b border-zinc-200 bg-indigo-50/70 px-5 py-4 dark:border-zinc-800 dark:bg-indigo-950/30">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Penugasan produksi</p>
+                            <h2 id="tim-paket-title" class="mt-1 text-lg font-semibold text-zinc-950 dark:text-white">{{ $paket->firstWhere('id', $paketTimId)?->judul }}</h2>
+                        </div>
+                        <button type="button" wire:click="tutupTim" class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-white dark:text-zinc-300 dark:hover:bg-zinc-800">Tutup</button>
+                    </div>
+
+                    <div class="grid gap-6 p-5 lg:grid-cols-2">
+                        <form wire:submit="simpanPenugasan" class="grid gap-4 sm:grid-cols-2">
+                            <label class="text-sm font-semibold text-zinc-950 dark:text-white">Pelaksana
+                                <select wire:model="anggotaId" class="mt-1.5 min-h-11 w-full rounded-xl border-zinc-300 bg-white text-sm text-zinc-950 focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
+                                    <option value="">Pilih orang</option>
+                                    @foreach ($anggota as $orang)<option value="{{ $orang->id }}">{{ $orang->nama }}</option>@endforeach
+                                </select>
+                                @error('anggotaId') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                                @error('user_id') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            </label>
+                            <label class="text-sm font-semibold text-zinc-950 dark:text-white">Peran
+                                <select wire:model="peranId" class="mt-1.5 min-h-11 w-full rounded-xl border-zinc-300 bg-white text-sm text-zinc-950 focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
+                                    <option value="">Pilih peran</option>
+                                    @foreach ($peran as $itemPeran)<option value="{{ $itemPeran->id }}">{{ $itemPeran->nama }}</option>@endforeach
+                                </select>
+                                @error('peranId') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            </label>
+                            <label class="text-sm font-semibold text-zinc-950 dark:text-white">Tenggat
+                                <input wire:model="deadlinePenugasanAt" type="datetime-local" class="mt-1.5 min-h-11 w-full rounded-xl border-zinc-300 bg-white text-sm text-zinc-950 focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
+                                @error('deadlinePenugasanAt') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            </label>
+                            <label class="text-sm font-semibold text-zinc-950 dark:text-white">Pembimbing (wajib untuk magang)
+                                <select wire:model="pembimbingId" class="mt-1.5 min-h-11 w-full rounded-xl border-zinc-300 bg-white text-sm text-zinc-950 focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white">
+                                    <option value="">Tanpa pembimbing</option>
+                                    @foreach ($anggota as $orang)<option value="{{ $orang->id }}">{{ $orang->nama }}</option>@endforeach
+                                </select>
+                                @error('pembimbingId') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            </label>
+                            <label class="text-sm font-semibold text-zinc-950 dark:text-white sm:col-span-2">Catatan kerja
+                                <textarea wire:model="catatanPenugasan" rows="3" class="mt-1.5 w-full rounded-xl border-zinc-300 bg-white text-sm text-zinc-950 focus:border-indigo-500 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white" placeholder="Hasil yang diharapkan atau catatan khusus untuk pelaksana"></textarea>
+                                @error('catatanPenugasan') <span class="mt-1 block text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            </label>
+                            <div class="sm:col-span-2 flex justify-end">
+                                <button type="submit" wire:loading.attr="disabled" wire:target="simpanPenugasan" class="min-h-10 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50">Tambahkan pelaksana</button>
+                            </div>
+                        </form>
+
+                        <div>
+                            <h3 class="text-sm font-semibold text-zinc-950 dark:text-white">Tim saat ini</h3>
+                            <ul class="mt-3 divide-y divide-zinc-200 dark:divide-zinc-800">
+                                @forelse ($penugasanPaket->get($paketTimId, collect()) as $item)
+                                    <li wire:key="penugasan-paket-{{ $item->id }}" class="flex items-start justify-between gap-4 py-3">
+                                        <div>
+                                            <p class="font-medium text-zinc-950 dark:text-white">{{ $namaOrang[$item->user_id] ?? 'Pengguna tidak tersedia' }}</p>
+                                            <p class="mt-0.5 text-sm text-zinc-500">{{ $item->peran?->nama }} · Tenggat {{ $item->deadline_at?->translatedFormat('j M Y H:i') }}</p>
+                                            @if ($item->catatan)<p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{{ $item->catatan }}</p>@endif
+                                            @if ($item->pembimbing_id)<p class="mt-1 text-xs text-indigo-600 dark:text-indigo-400">Pembimbing: {{ $namaOrang[$item->pembimbing_id] ?? 'Tidak tersedia' }}</p>@endif
+                                        </div>
+                                        @if ($item->status === 'aktif')
+                                            <button type="button" wire:click="batalkanPenugasan({{ $item->id }})" wire:confirm="Batalkan penugasan ini?" class="rounded-lg px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950">Batalkan</button>
+                                        @else
+                                            <span class="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ str($item->status)->replace('_', ' ')->title() }}</span>
+                                        @endif
+                                    </li>
+                                @empty
+                                    <li class="py-8 text-center text-sm text-zinc-500">Belum ada pelaksana. Tambahkan orang agar paket masuk Papan Kanban dan Tugas Saya.</li>
+                                @endforelse
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            @endif
+
+            <aside class="min-w-0 xl:col-start-2 xl:row-start-1">
                 <div class="xl:sticky xl:top-6">
                     @if ($paketAktif)
                         <section class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-xl shadow-stone-950/5 dark:border-zinc-800 dark:bg-zinc-900">
@@ -177,13 +253,6 @@
                                         @error('tipeBahan') <span class="mt-1 block text-sm text-red-600">{{ $message }}</span> @enderror
                                     </fieldset>
 
-                                    @php
-                                        $acceptBahan = match ($tipeBahan) {
-                                            'foto' => 'image/jpeg,image/png,image/webp',
-                                            'dokumen' => '.pdf,.doc,.docx,.txt',
-                                            default => 'audio/mpeg,audio/wav,audio/x-m4a,audio/ogg',
-                                        };
-                                    @endphp
                                     @if ($tipeBahan === 'catatan')
                                         <label class="block">
                                             <span class="mb-1.5 block text-sm font-semibold">Catatan sumber</span>
@@ -191,6 +260,13 @@
                                             @error('catatanBahan') <span class="mt-1 block text-sm text-red-600">{{ $message }}</span> @enderror
                                         </label>
                                     @else
+                                        @php
+                                            $acceptBahan = match ($tipeBahan) {
+                                                'foto' => 'image/jpeg,image/png,image/webp',
+                                                'dokumen' => '.pdf,.doc,.docx,.txt',
+                                                default => 'audio/mpeg,audio/wav,audio/x-m4a,audio/ogg',
+                                            };
+                                        @endphp
                                         <label class="block">
                                             <span class="mb-1.5 block text-sm font-semibold">Pilih {{ $tipeBahan }}</span>
                                             <input wire:model="unggahanBahan" type="file" multiple accept="{{ $acceptBahan }}"

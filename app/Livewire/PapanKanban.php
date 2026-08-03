@@ -32,6 +32,7 @@ class PapanKanban extends Component
 
         $paket = PaketKonten::query()
             ->whereIn('status', ['on_progress', 'finish_production', 'review'])
+            ->whereIn('id', $penugasan->pluck('untuk_id')->unique())
             ->when($this->filterOrang !== '', fn ($query) => $query->whereIn('id', $paketIdsOrang))
             ->when($this->filterSumber === 'agenda', fn ($query) => $query->whereNotNull('agenda_id'))
             ->when($this->filterSumber === 'pr_plan', fn ($query) => $query->whereNotNull('pr_plan_item_id'))

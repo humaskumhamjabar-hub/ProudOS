@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
 use Modules\Agenda\Models\Agenda;
@@ -18,7 +20,11 @@ use Modules\Content\Models\AiUsulan;
 use Modules\Content\Models\Bahan;
 use Modules\Content\Models\Draf;
 use Modules\Content\Models\PaketKonten;
+use Modules\People\Models\User;
 use Modules\Planning\Models\PrPlanItem;
+use Modules\Scheduling\Actions\BuatPenugasan;
+use Modules\Scheduling\Models\Penugasan;
+use Modules\Scheduling\Models\PeranProduksi;
 
 #[Layout('components.layouts.app')]
 class KelolaProduksiKonten extends Component
@@ -43,15 +49,34 @@ class KelolaProduksiKonten extends Component
 
     public string $isiEditUsulanAi = '';
 
+    #[Locked]
+    public ?int $paketTimId = null;
+
+    public int|string $anggotaId = '';
+
+    public int|string $peranId = '';
+
+    public int|string $pembimbingId = '';
+
+    public string $deadlinePenugasanAt = '';
+
+    public string $catatanPenugasan = '';
+
     public function mount(?int $paket = null): void
     {
+        if ($paket) {
+            $paketAktif = PaketKonten::findOrFail($paket);
+            Gate::authorize('kerjakan-paket', $paketAktif);
+            $this->paketAktifId = $paketAktif->id;
+
+            return;
+        }
+
         Gate::authorize('kelola_konten');
-        $this->paketAktifId = $paket
-            ? PaketKonten::findOrFail($paket)->id
-            : PaketKonten::query()
-                ->where('status', '!=', 'arsip')
-                ->latest('updated_at')
-                ->value('id');
+        $this->paketAktifId = PaketKonten::query()
+            ->where('status', '!=', 'arsip')
+            ->latest('updated_at')
+            ->value('id');
     }
 
     public function mulaiDariPrPlan(int $itemId): void
@@ -85,8 +110,8 @@ class KelolaProduksiKonten extends Component
 
     public function pilihPaket(int $paketId): void
     {
-        Gate::authorize('kelola_konten');
         $paket = PaketKonten::findOrFail($paketId);
+        Gate::authorize('kerjakan-paket', $paket);
 
         $this->paketAktifId = $paket->id;
         $drafTerbaru = $paket->draf()->latest('versi')->first();
@@ -96,10 +121,90 @@ class KelolaProduksiKonten extends Component
         $this->resetValidation();
     }
 
+    public function aturTim(int $paketId): void
+    {
+        Gate::authorize('kelola_penugasan');
+
+        $paket = PaketKonten::query()->where('status', '!=', 'arsip')->findOrFail($paketId);
+        $this->paketAktifId = $paket->id;
+        $this->paketTimId = $paket->id;
+        $this->reset(['anggotaId', 'peranId', 'pembimbingId', 'catatanPenugasan']);
+        $this->deadlinePenugasanAt = now()->addDay()->setTime(17, 0)->format('Y-m-d\\TH:i');
+        $this->resetValidation();
+    }
+
+    public function simpanPenugasan(BuatPenugasan $buat): void
+    {
+        Gate::authorize('kelola_penugasan');
+
+        $data = $this->validate([
+            'paketTimId' => ['required', 'integer', 'exists:paket_konten,id'],
+            'anggotaId' => ['required', 'integer', Rule::exists('users', 'id')->where('status', 'aktif')->whereNull('deleted_at')],
+            'peranId' => ['required', 'integer', Rule::exists('peran_produksi', 'id')->where('aktif', true)],
+            'pembimbingId' => ['nullable', 'integer', 'different:anggotaId', Rule::exists('users', 'id')->where('status', 'aktif')->whereNull('deleted_at')],
+            'deadlinePenugasanAt' => ['required', 'date'],
+            'catatanPenugasan' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $paket = PaketKonten::query()->where('status', '!=', 'arsip')->findOrFail($data['paketTimId']);
+        $anggota = User::findOrFail($data['anggotaId']);
+
+        if ($anggota->batch_id && ! $data['pembimbingId']) {
+            throw ValidationException::withMessages(['pembimbingId' => 'Pilih pembimbing untuk peserta magang.']);
+        }
+
+        $sudahAktif = Penugasan::query()
+            ->where('user_id', $anggota->id)
+            ->where('untuk_type', 'paket_konten')
+            ->where('untuk_id', $paket->id)
+            ->where('peran_id', $data['peranId'])
+            ->where('status', 'aktif')
+            ->exists();
+
+        if ($sudahAktif) {
+            throw ValidationException::withMessages(['anggotaId' => 'Orang ini sudah aktif pada paket dan peran yang sama.']);
+        }
+
+        $buat->handle([
+            'user_id' => $anggota->id,
+            'peran_id' => PeranProduksi::findOrFail($data['peranId'])->id,
+            'pembimbing_id' => $data['pembimbingId'] ? User::findOrFail($data['pembimbingId'])->id : null,
+            'tipe' => 'berdeadline',
+            'deadline_at' => $data['deadlinePenugasanAt'],
+            'untuk_type' => 'paket_konten',
+            'untuk_id' => $paket->id,
+            'status' => 'aktif',
+            'catatan' => $data['catatanPenugasan'] ?: null,
+        ]);
+
+        $this->reset(['anggotaId', 'peranId', 'pembimbingId', 'catatanPenugasan']);
+        session()->flash('produksi-tersimpan', 'Penugasan paket berhasil ditambahkan.');
+    }
+
+    public function batalkanPenugasan(int $penugasanId): void
+    {
+        Gate::authorize('kelola_penugasan');
+
+        Penugasan::query()
+            ->where('untuk_type', 'paket_konten')
+            ->where('untuk_id', $this->paketTimId)
+            ->where('status', 'aktif')
+            ->findOrFail($penugasanId)
+            ->update(['status' => 'batal']);
+
+        session()->flash('produksi-tersimpan', 'Penugasan paket dibatalkan.');
+    }
+
+    public function tutupTim(): void
+    {
+        $this->paketTimId = null;
+        $this->reset(['anggotaId', 'peranId', 'pembimbingId', 'catatanPenugasan', 'deadlinePenugasanAt']);
+        $this->resetValidation();
+    }
+
     public function buatUsulanAi(PenyediaAi $penyedia, BuatUsulan $pembuat): void
     {
-        Gate::authorize('kelola_konten');
         $paket = PaketKonten::findOrFail($this->paketAktifId);
+        Gate::authorize('kerjakan-paket', $paket);
         $data = $this->validate([
             'jenisUsulanAi' => ['required', Rule::in(['fakta', 'berita', 'caption', 'opsi_judul', 'ringkasan'])],
         ]);
@@ -164,7 +269,7 @@ class KelolaProduksiKonten extends Component
 
     public function mulaiEditUsulanAi(int $usulanId): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         $usulan = $this->usulanPaketAktif($usulanId);
         abort_unless($usulan->status === 'menunggu', 422);
 
@@ -181,7 +286,7 @@ class KelolaProduksiKonten extends Component
 
     public function simpanEditUsulanAi(): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         $usulan = $this->usulanPaketAktif((int) $this->usulanAiDieditId);
         abort_unless($usulan->status === 'menunggu', 422);
         $data = $this->validate([
@@ -201,7 +306,7 @@ class KelolaProduksiKonten extends Component
 
     public function gunakanUsulanAi(int $usulanId): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         $usulan = $this->usulanPaketAktif($usulanId);
         abort_unless(in_array($usulan->status, ['diterima', 'diedit'], true), 422);
 
@@ -217,7 +322,7 @@ class KelolaProduksiKonten extends Component
 
     private function tinjauUsulanAi(int $usulanId, string $status): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         abort_unless(in_array($status, ['diterima', 'ditolak'], true), 422);
         $usulan = $this->usulanPaketAktif($usulanId);
         abort_unless($usulan->status === 'menunggu', 422);
@@ -237,8 +342,8 @@ class KelolaProduksiKonten extends Component
 
     public function simpanDraf(): void
     {
-        Gate::authorize('kelola_konten');
         $paket = PaketKonten::findOrFail($this->paketAktifId);
+        Gate::authorize('kerjakan-paket', $paket);
         $data = $this->validate([
             'jenisDraf' => ['required', Rule::in(['berita', 'caption', 'judul', 'script'])],
             'isiDraf' => ['required', 'string', 'max:100000'],
@@ -266,7 +371,7 @@ class KelolaProduksiKonten extends Component
 
     public function muatDraf(int $drafId): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         $draf = Draf::where('paket_konten_id', $this->paketAktifId)->findOrFail($drafId);
 
         $this->jenisDraf = $draf->jenis;
@@ -276,8 +381,8 @@ class KelolaProduksiKonten extends Component
 
     public function unggahBahan(): void
     {
-        Gate::authorize('kelola_konten');
         $paket = PaketKonten::findOrFail($this->paketAktifId);
+        Gate::authorize('kerjakan-paket', $paket);
         abort_if($paket->status === 'arsip', 422);
 
         $data = $this->validate([
@@ -333,7 +438,7 @@ class KelolaProduksiKonten extends Component
 
     public function toggleDipakaiFinal(int $bahanId): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         $bahan = $this->bahanPaketAktif($bahanId);
         abort_unless($bahan->tipe === 'foto', 422);
 
@@ -342,7 +447,7 @@ class KelolaProduksiKonten extends Component
 
     public function cobaUlangEkstraksi(int $bahanId): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         $bahan = $this->bahanPaketAktif($bahanId);
         abort_unless($bahan->tipe === 'dokumen', 422);
 
@@ -353,8 +458,8 @@ class KelolaProduksiKonten extends Component
 
     public function urutkanBahan(array $urutanIds): void
     {
-        Gate::authorize('kelola_konten');
         $paket = PaketKonten::findOrFail($this->paketAktifId);
+        Gate::authorize('kerjakan-paket', $paket);
         $idsTersimpan = $paket->bahan()->orderBy('urutan')->pluck('id')->all();
         $idsDikirim = array_values(array_map('intval', $urutanIds));
         abort_unless(count($idsDikirim) === count(array_unique($idsDikirim)), 422);
@@ -373,7 +478,7 @@ class KelolaProduksiKonten extends Component
 
     public function pindahBahan(int $bahanId, string $arah): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         abort_unless(in_array($arah, ['naik', 'turun'], true), 422);
         $bahan = $this->bahanPaketAktif($bahanId);
         $query = PaketKonten::findOrFail($this->paketAktifId)->bahan();
@@ -394,7 +499,7 @@ class KelolaProduksiKonten extends Component
 
     public function hapusBahan(int $bahanId): void
     {
-        Gate::authorize('kelola_konten');
+        $this->authorizePaketAktif();
         $bahan = $this->bahanPaketAktif($bahanId);
         abort_if(PaketKonten::findOrFail($this->paketAktifId)->status === 'arsip', 422);
 
@@ -437,8 +542,8 @@ class KelolaProduksiKonten extends Component
 
     public function ubahStatus(int $paketId, string $status): void
     {
-        Gate::authorize('kelola_konten');
         $paket = PaketKonten::findOrFail($paketId);
+        Gate::authorize('kerjakan-paket', $paket);
         $transisi = [
             'on_progress' => 'finish_production',
             'finish_production' => 'review',
@@ -451,8 +556,8 @@ class KelolaProduksiKonten extends Component
 
     public function kembalikanRevisi(int $paketId): void
     {
-        Gate::authorize('kelola_konten');
         $paket = PaketKonten::findOrFail($paketId);
+        Gate::authorize('kerjakan-paket', $paket);
         abort_unless(in_array($paket->status, ['finish_production', 'review'], true), 422);
 
         $paket->update([
@@ -464,6 +569,14 @@ class KelolaProduksiKonten extends Component
 
     public function render()
     {
+        $bolehKelolaSemua = Gate::allows('kelola_konten');
+        $paketIdsSaya = $bolehKelolaSemua
+            ? collect()
+            : Penugasan::query()
+                ->where('user_id', Auth::id())
+                ->where('untuk_type', 'paket_konten')
+                ->where('status', 'aktif')
+                ->pluck('untuk_id');
         $paket = PaketKonten::query()
             ->with([
                 'draf' => fn ($query) => $query->latest('versi'),
@@ -471,6 +584,7 @@ class KelolaProduksiKonten extends Component
                 'aiUsulan' => fn ($query) => $query->latest(),
             ])
             ->where('status', '!=', 'arsip')
+            ->when(! $bolehKelolaSemua, fn ($query) => $query->whereIn('id', $paketIdsSaya))
             ->latest('updated_at')
             ->get();
 
@@ -484,6 +598,7 @@ class KelolaProduksiKonten extends Component
             ->where('status', 'dijadwalkan')
             ->whereNotIn('id', PaketKonten::whereNotNull('pr_plan_item_id')->pluck('pr_plan_item_id'))
             ->latest('updated_at')
+            ->when(! $bolehKelolaSemua, fn ($query) => $query->whereRaw('1 = 0'))
             ->get();
 
         $agenda = Agenda::query()
@@ -491,15 +606,38 @@ class KelolaProduksiKonten extends Component
             ->get()
             ->keyBy('id');
 
+        $penugasanPaket = Penugasan::with('peran')
+            ->where('untuk_type', 'paket_konten')
+            ->whereIn('untuk_id', $paket->pluck('id'))
+            ->where('status', '!=', 'batal')
+            ->orderBy('deadline_at')
+            ->get()
+            ->groupBy('untuk_id');
+        $orangIds = $penugasanPaket->flatten(1)->pluck('user_id')
+            ->merge($penugasanPaket->flatten(1)->pluck('pembimbing_id'))
+            ->filter()->unique();
+
         return view('livewire.kelola-produksi-konten', [
             'paket' => $paket,
             'paketAktif' => $paketAktif,
             'itemSiap' => $itemSiap,
             'agenda' => $agenda,
+            'penugasanPaket' => $penugasanPaket,
+            'namaOrang' => User::withTrashed()->whereIn('id', $orangIds)->pluck('nama', 'id'),
+            'anggota' => User::query()->where('status', 'aktif')->orderBy('nama')->get(),
+            'peran' => PeranProduksi::query()->where('aktif', true)->orderBy('nama')->get(),
             'drafAktif' => $paketAktif?->draf ?? collect(),
             'bahanAktif' => $paketAktif?->bahan ?? collect(),
             'usulanAiAktif' => $paketAktif?->aiUsulan ?? collect(),
             'aiTersedia' => app(PenyediaAi::class)->tersedia(),
         ]);
+    }
+
+    private function authorizePaketAktif(): PaketKonten
+    {
+        $paket = PaketKonten::findOrFail($this->paketAktifId);
+        Gate::authorize('kerjakan-paket', $paket);
+
+        return $paket;
     }
 }

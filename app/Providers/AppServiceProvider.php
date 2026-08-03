@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Modules\Content\Models\PaketKonten;
 use Modules\People\Models\User;
 use Modules\Scheduling\Models\Penugasan;
 use Modules\Work\Models\Tugas;
@@ -60,6 +61,19 @@ class AppServiceProvider extends ServiceProvider
                 ->where('user_id', $user->id)
                 ->where('untuk_type', 'tugas')
                 ->where('untuk_id', $tugas->id)
+                ->where('status', 'aktif')
+                ->exists();
+        });
+
+        Gate::define('kerjakan-paket', function (User $user, PaketKonten $paket): bool {
+            if ($user->punyaIzin('kelola_konten')) {
+                return true;
+            }
+
+            return Penugasan::query()
+                ->where('user_id', $user->id)
+                ->where('untuk_type', 'paket_konten')
+                ->where('untuk_id', $paket->id)
                 ->where('status', 'aktif')
                 ->exists();
         });

@@ -35,6 +35,9 @@
                         · <span class="text-indigo-600 dark:text-indigo-400">didampingi pembimbing</span>
                     @endif
                 </div>
+                @if ($p->catatan)
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">{{ $p->catatan }}</p>
+                @endif
             </div>
             @if ($p->untuk_type === 'tugas')
                 <a href="{{ route('tugas.kerjakan', $p->untuk_id) }}" class="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900">

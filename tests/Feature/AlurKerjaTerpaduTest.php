@@ -53,9 +53,21 @@ function paketUntukPapan(User $user, string $judul, string $status, array $tamba
 
 it('papan memakai paket konten sebagai satu-satunya sumber status', function () {
     $user = penggunaAlurTerpadu();
-    paketUntukPapan($user, 'Paket sedang ditulis', 'on_progress');
-    paketUntukPapan($user, 'Paket selesai produksi', 'finish_production');
-    paketUntukPapan($user, 'Paket menunggu publikasi', 'review');
+    $peran = PeranProduksi::create(['nama' => 'Editor', 'slug' => 'editor-status-papan', 'aktif' => true]);
+    $paketAktif = collect([
+        paketUntukPapan($user, 'Paket sedang ditulis', 'on_progress'),
+        paketUntukPapan($user, 'Paket selesai produksi', 'finish_production'),
+        paketUntukPapan($user, 'Paket menunggu publikasi', 'review'),
+    ]);
+    $paketAktif->each(fn (PaketKonten $paket) => Penugasan::create([
+        'user_id' => $user->id,
+        'tipe' => 'berdeadline',
+        'deadline_at' => now()->addDay(),
+        'untuk_type' => 'paket_konten',
+        'untuk_id' => $paket->id,
+        'peran_id' => $peran->id,
+        'status' => 'aktif',
+    ]));
     paketUntukPapan($user, 'Paket sudah arsip', 'arsip');
     Tugas::create(['judul' => 'Tugas lama tidak boleh muncul', 'status' => 'dikerjakan', 'dibuat_oleh' => $user->id]);
 
@@ -87,6 +99,83 @@ it('papan dapat difilter menurut orang yang ditugaskan dan sumber paket', functi
         ->set('filterSumber', 'agenda')
         ->assertSee('Paket agenda')
         ->assertDontSee('Paket PR Plan');
+});
+
+it('papan hanya menampilkan paket yang sudah memiliki penugasan aktif', function () {
+    $user = penggunaAlurTerpadu();
+    $peran = PeranProduksi::create(['nama' => 'Editor', 'slug' => 'editor-papan-aktif', 'aktif' => true]);
+    $paketTanpaPic = paketUntukPapan($user, 'Paket belum ditugaskan', 'on_progress');
+    $paketDenganPic = paketUntukPapan($user, 'Paket sedang dikerjakan tim', 'on_progress');
+    Penugasan::create([
+        'user_id' => $user->id,
+        'tipe' => 'berdeadline',
+        'deadline_at' => now()->addDay(),
+        'untuk_type' => 'paket_konten',
+        'untuk_id' => $paketDenganPic->id,
+        'peran_id' => $peran->id,
+        'status' => 'aktif',
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(PapanKanban::class)
+        ->assertSee($paketDenganPic->judul)
+        ->assertDontSee($paketTanpaPic->judul)
+        ->assertViewHas('totalAktif', 1);
+});
+
+it('koordinator dapat menugaskan paket lalu pelaksana membukanya dari tugas saya', function () {
+    $koordinator = penggunaAlurTerpadu();
+    $izinPenugasan = Permission::create(['nama' => 'Kelola penugasan', 'slug' => 'kelola_penugasan']);
+    $koordinator->role->permissions()->attach($izinPenugasan);
+    $rolePelaksana = Role::create(['nama' => 'Pelaksana Paket', 'slug' => 'pelaksana-paket']);
+    $pelaksana = User::create([
+        'nama' => 'Pelaksana Paket',
+        'email' => 'pelaksana-paket@example.com',
+        'password' => 'password',
+        'role_id' => $rolePelaksana->id,
+        'status' => 'aktif',
+    ]);
+    $peran = PeranProduksi::create(['nama' => 'Penulis', 'slug' => 'penulis-paket-langsung', 'aktif' => true]);
+    $paket = paketUntukPapan($koordinator, 'Paket yang baru dibagikan', 'on_progress');
+
+    Livewire::actingAs($koordinator)
+        ->test(KelolaProduksiKonten::class, ['paket' => $paket->id])
+        ->call('aturTim', $paket->id)
+        ->set('anggotaId', $pelaksana->id)
+        ->set('peranId', $peran->id)
+        ->set('deadlinePenugasanAt', now()->addDay()->format('Y-m-d\\TH:i'))
+        ->set('catatanPenugasan', 'Susun naskah dan lengkapi bahan pendukung.')
+        ->call('simpanPenugasan')
+        ->assertHasNoErrors()
+        ->assertSee('Penugasan paket berhasil ditambahkan.');
+
+    $penugasan = Penugasan::sole();
+    expect($penugasan->user_id)->toBe($pelaksana->id)
+        ->and($penugasan->untuk_type)->toBe('paket_konten')
+        ->and($penugasan->untuk_id)->toBe($paket->id)
+        ->and($penugasan->catatan)->toBe('Susun naskah dan lengkapi bahan pendukung.');
+
+    Livewire::actingAs($pelaksana)
+        ->test(TugasSaya::class)
+        ->assertSee($paket->judul)
+        ->assertSee('Susun naskah dan lengkapi bahan pendukung.')
+        ->assertSeeHtml('href="'.route('produksi.index', ['paket' => $paket->id]).'"');
+
+    Livewire::actingAs($pelaksana)
+        ->test(KelolaProduksiKonten::class, ['paket' => $paket->id])
+        ->assertSee($paket->judul);
+
+    $orangLain = User::create([
+        'nama' => 'Bukan Pelaksana',
+        'email' => 'bukan-pelaksana-paket@example.com',
+        'password' => 'password',
+        'role_id' => $rolePelaksana->id,
+        'status' => 'aktif',
+    ]);
+
+    Livewire::actingAs($orangLain)
+        ->test(KelolaProduksiKonten::class, ['paket' => $paket->id])
+        ->assertForbidden();
 });
 
 it('tugas dengan subjek paket konten langsung membuka meja produksi dan menandai dibaca', function () {
