@@ -50,6 +50,13 @@ jobs:
       - name: Build Assets
         run: npm run build
 
+      - name: Configure Render Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-roboto
+          echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          echo "FFMPEG_PATH=$(command -v ffmpeg)" >> "$GITHUB_ENV"
+
       - name: Run Tests
         run: ./vendor/bin/pest
 
