@@ -64,6 +64,8 @@ class KelolaProduksiKonten extends Component
 
     public function mount(?int $paket = null): void
     {
+        $paket ??= request()->integer('paket') ?: null;
+
         if ($paket) {
             $paketAktif = PaketKonten::findOrFail($paket);
             Gate::authorize('kerjakan-paket', $paketAktif);

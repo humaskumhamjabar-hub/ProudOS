@@ -165,6 +165,11 @@ it('koordinator dapat menugaskan paket lalu pelaksana membukanya dari tugas saya
         ->test(KelolaProduksiKonten::class, ['paket' => $paket->id])
         ->assertSee($paket->judul);
 
+    $this->actingAs($pelaksana)
+        ->get(route('produksi.index', ['paket' => $paket->id]))
+        ->assertOk()
+        ->assertSee($paket->judul);
+
     $orangLain = User::create([
         'nama' => 'Bukan Pelaksana',
         'email' => 'bukan-pelaksana-paket@example.com',
@@ -175,6 +180,10 @@ it('koordinator dapat menugaskan paket lalu pelaksana membukanya dari tugas saya
 
     Livewire::actingAs($orangLain)
         ->test(KelolaProduksiKonten::class, ['paket' => $paket->id])
+        ->assertForbidden();
+
+    $this->actingAs($orangLain)
+        ->get(route('produksi.index', ['paket' => $paket->id]))
         ->assertForbidden();
 });
 
