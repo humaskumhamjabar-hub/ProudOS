@@ -235,8 +235,10 @@ class SimpanVideoSosmed
             getenv('HOME')."/Library/Fonts/{$nama}",
             "/Library/Fonts/{$nama}",
             "/usr/share/fonts/truetype/roboto/{$nama}",
+            "/usr/share/fonts/truetype/roboto/unhinted/RobotoTTF/{$nama}",
             "/usr/share/fonts/TTF/{$nama}",
             '/System/Library/Fonts/Supplemental/Arial.ttf',
+            '/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf',
         ];
         $path = collect($calon)->first(fn (string $item) => is_file($item));
         throw_unless($path, RuntimeException::class, 'Font Roboto belum tersedia untuk render video.');
